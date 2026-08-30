@@ -52,3 +52,7 @@ Thumbs.db
 # Prisma
 *.db
 *.db-journal
+
+# Nested Backups
+career-engine-main/
+
