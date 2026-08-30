@@ -1,0 +1,296 @@
+// =======================================================
+// CAREER ENGINE — PRISMA DATABASE SCHEMA (POSTGRESQL)
+// =======================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -------------------------------------------------------
+// ENUMS
+// -------------------------------------------------------
+
+enum UserRole {
+  USER
+  ADMIN
+  MENTOR
+}
+
+enum CareerStage {
+  FRESHER
+  PROFESSIONAL
+  CAREER_CHANGER
+  STUDENT
+}
+
+enum AssessmentType {
+  FRESHER
+  PROFESSIONAL
+}
+
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+}
+
+enum PriorityLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum SkillProficiency {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum SkillCategory {
+  PROGRAMMING_LANGUAGE
+  FRAMEWORK_LIBRARY
+  DATABASE
+  CLOUD_DEVOPS
+  DATA_AI
+  SYSTEM_DESIGN
+  SOFT_SKILL
+  TOOL_PLATFORM
+  OTHER
+}
+
+// -------------------------------------------------------
+// USER & IDENTITY
+// -------------------------------------------------------
+
+model User {
+  id                String            @id @default(uuid())
+  email             String            @unique
+  passwordHash      String?
+  fullName          String
+  avatarUrl         String?
+  role              UserRole          @default(USER)
+  careerStage       CareerStage       @default(FRESHER)
+  isOnboarded       Boolean           @default(false)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  // Relationships
+  careerProfile          CareerProfile?
+  fresherAssessments     FresherAssessment[]
+  professionalAssessments ProfessionalAssessment[]
+  resumes                Resume[]
+  careerAnalyses         CareerAnalysis[]
+  roadmaps               Roadmap[]
+
+  @@map("users")
+}
+
+// -------------------------------------------------------
+// CAREER PROFILE
+// -------------------------------------------------------
+
+model CareerProfile {
+  id               String            @id @default(uuid())
+  userId           String            @unique
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  headline         String?
+  targetRole       String?
+  targetIndustry   String?
+  targetSalaryMin  Int?
+  targetSalaryMax  Int?
+  preferredWorkType String?          // Remote, Hybrid, Onsite
+  locationPreference String?
+  bio              String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  // User's acquired skills
+  profileSkills    ProfileSkill[]
+
+  @@map("career_profiles")
+}
+
+// -------------------------------------------------------
+// ASSESSMENTS (FRESHER & PROFESSIONAL)
+// -------------------------------------------------------
+
+model FresherAssessment {
+  id                String          @id @default(uuid())
+  userId            String
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  degree            String
+  major             String
+  graduationYear    Int
+  institution       String
+  gpa               Float?
+  primaryInterests  String[]        // Array of interest domains
+  knownTechnologies String[]        // Self-reported starter tech
+  projectSummary    String?
+  preferredCareerTracks String[]    // Frontend, Backend, AI, Data, etc.
+  rawInputJson      Json?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@map("fresher_assessments")
+}
+
+model ProfessionalAssessment {
+  id                String          @id @default(uuid())
+  userId            String
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currentRole       String
+  currentCompany    String?
+  totalExperienceMonths Int
+  currentTechStack  String[]
+  targetRole        String
+  motivationForChange String?       // Growth, Switch, Compensation, Upskill
+  challengesFaced   String?
+  rawInputJson      Json?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@map("professional_assessments")
+}
+
+// -------------------------------------------------------
+// RESUMES
+// -------------------------------------------------------
+
+model Resume {
+  id                String          @id @default(uuid())
+  userId            String
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileName          String
+  fileUrl           String?
+  fileSizeBytes     Int?
+  rawText           String?
+  parsedDataJson    Json?           // Future ATS / AI parsed payload
+  atsScore          Float?          // Overall match score placeholder
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@map("resumes")
+}
+
+// -------------------------------------------------------
+// SKILLS TAXONOMY & RELATIONSHIPS
+// -------------------------------------------------------
+
+model Skill {
+  id                String          @id @default(uuid())
+  name              String          @unique
+  slug              String          @unique
+  category          SkillCategory   @default(OTHER)
+  description       String?
+  marketDemandScore Float?          // 0.0 - 100.0 market demand index
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  profileSkills     ProfileSkill[]
+  taskSkills        RoadmapTaskSkill[]
+
+  @@map("skills")
+}
+
+model ProfileSkill {
+  id                String          @id @default(uuid())
+  careerProfileId   String
+  careerProfile     CareerProfile   @relation(fields: [careerProfileId], references: [id], onDelete: Cascade)
+  skillId           String
+  skill             Skill           @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  proficiency       SkillProficiency @default(BEGINNER)
+  yearsOfExperience Float?
+  isVerified        Boolean         @default(false)
+  createdAt         DateTime        @default(now())
+
+  @@unique([careerProfileId, skillId])
+  @@map("profile_skills")
+}
+
+// -------------------------------------------------------
+// CAREER ANALYSIS & INSIGHTS
+// -------------------------------------------------------
+
+model CareerAnalysis {
+  id                String          @id @default(uuid())
+  userId            String
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetRole        String
+  readinessScore    Float           // 0.0 - 100.0 readiness percentage
+  summary           String          // Executive narrative
+  strengths         String[]
+  gaps              String[]
+  marketInsights    Json?           // Market salary, growth rate, hiring volume
+  recommendations   String[]
+  rawModelOutput    Json?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  roadmaps          Roadmap[]
+
+  @@map("career_analyses")
+}
+
+// -------------------------------------------------------
+// ROADMAPS & TASKS
+// -------------------------------------------------------
+
+model Roadmap {
+  id                String          @id @default(uuid())
+  userId            String
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  careerAnalysisId  String?
+  careerAnalysis    CareerAnalysis? @relation(fields: [careerAnalysisId], references: [id], onDelete: SetNull)
+  title             String
+  description       String?
+  targetRole        String
+  estimatedWeeks    Int             @default(12)
+  completionPercent Float           @default(0.0)
+  isActive          Boolean         @default(true)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  tasks             RoadmapTask[]
+
+  @@map("roadmaps")
+}
+
+model RoadmapTask {
+  id                String          @id @default(uuid())
+  roadmapId         String
+  roadmap           Roadmap         @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  orderIndex        Int
+  phaseTitle        String          // e.g. "Phase 1: Core Fundamentals"
+  title             String
+  description       String?
+  resourceUrls      String[]
+  status            TaskStatus      @default(NOT_STARTED)
+  priority          PriorityLevel   @default(MEDIUM)
+  estimatedHours    Int?
+  completedAt       DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  targetSkills      RoadmapTaskSkill[]
+
+  @@map("roadmap_tasks")
+}
+
+model RoadmapTaskSkill {
+  id                String          @id @default(uuid())
+  taskId            String
+  task              RoadmapTask     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  skillId           String
+  skill             Skill           @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, skillId])
+  @@map("roadmap_task_skills")
+}
