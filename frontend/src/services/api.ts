@@ -21,10 +21,21 @@ export interface HealthStatus {
 }
 
 const getApiBase = (): string => {
-  const raw = import.meta.env.VITE_API_URL || '/api';
-  if (raw === '/api') return '/api';
-  const clean = raw.replace(/\/+$/, '');
-  return clean.endsWith('/api') ? clean : `${clean}/api`;
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl && envUrl !== '/api') {
+    const clean = envUrl.replace(/\/+$/, '');
+    return clean.endsWith('/api') ? clean : `${clean}/api`;
+  }
+
+  // Automatic fallback for Render deployments
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname.includes('onrender.com')) {
+      return 'https://career-engine-ai.onrender.com/api';
+    }
+  }
+
+  return '/api';
 };
 
 const API_BASE = getApiBase();
@@ -45,15 +56,35 @@ export async function apiRequest<T = any>(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      headers,
+    });
+  } catch (netErr: any) {
+    const err: any = new Error("Unable to connect to Career Engine backend. The server may be waking up, please try again in a few seconds.");
+    err.code = "NETWORK_ERROR";
+    throw err;
+  }
 
-  const json: ApiResponse<T> = await response.json();
+  const rawText = await response.text();
+  let json: ApiResponse<T>;
+
+  try {
+    json = JSON.parse(rawText);
+  } catch {
+    if (response.status === 404) {
+      throw new Error(`Backend endpoint not found (${response.status}). Please check API URL configuration.`);
+    }
+    if (response.status >= 500) {
+      throw new Error("Backend service is initializing. Please wait a moment and try again.");
+    }
+    throw new Error(`Unexpected response from server (${response.status}): ${rawText.slice(0, 100)}`);
+  }
 
   if (!response.ok || json.success === false) {
-    const errorMsg = json.error?.message || `Request failed with status ${response.status}`;
+    const errorMsg = json.error?.message || (json as any).message || `Request failed with status ${response.status}`;
     const err: any = new Error(errorMsg);
     err.code = json.error?.code || "API_ERROR";
     err.status = response.status;
