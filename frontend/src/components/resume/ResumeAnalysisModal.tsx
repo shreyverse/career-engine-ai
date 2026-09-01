@@ -9,6 +9,7 @@ import {
   ArrowRight,
   Sparkles,
   RefreshCw,
+  Compass,
 } from 'lucide-react';
 import { resumeApi } from '../../services/resumeApi';
 import { GoogleAuthButton } from '../auth/GoogleAuthButton';
@@ -124,40 +125,57 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-black/80 backdrop-blur-xl animate-fadeIn select-none">
-      <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl bg-[#070D1E] border border-blue-500/30 shadow-[0_0_80px_rgba(59,130,246,0.25)] text-white p-6 sm:p-10 space-y-6">
-        
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-gradient-to-b from-[#070D1E] via-[#0A1329] to-[#060B18] text-white flex flex-col justify-between select-none animate-fadeIn">
+      {/* Full-Screen Ambient Lighting */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[1400px] h-[550px] bg-gradient-to-b from-blue-600/15 via-indigo-600/10 to-transparent blur-[160px] pointer-events-none rounded-full" />
+      <div className="absolute -top-40 -right-40 w-96 h-96 bg-purple-600/15 blur-[140px] pointer-events-none rounded-full" />
+      <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-600/15 blur-[140px] pointer-events-none rounded-full" />
+      <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] [background-size:28px_28px] opacity-40 pointer-events-none" />
+
+      {/* Top Navigation Bar */}
+      <header className="w-full max-w-7xl mx-auto flex items-center justify-between py-6 px-4 sm:px-8 border-b border-white/[0.06] relative z-20">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-[#0E1730] border border-white/[0.12] flex items-center justify-center text-blue-400 shadow-subtle-glow">
+            <Compass className="w-5 h-5 text-blue-400" />
+          </div>
+          <span className="font-display font-bold text-xl text-white tracking-tight">Career Engine</span>
+        </div>
+
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-5 right-5 w-9 h-9 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.1] text-slate-300 hover:text-white flex items-center justify-center transition-all z-20 cursor-pointer"
+          className="w-10 h-10 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.1] text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-md"
         >
           <X className="w-5 h-5" />
         </button>
+      </header>
 
+      {/* Main Analysis Container - Floating Glass Panel */}
+      <main className="w-full max-w-4xl mx-auto px-4 sm:px-8 py-8 relative z-10 flex-1 flex flex-col justify-center">
         {!analysisResult ? (
-          <div className="space-y-6 text-center max-w-2xl mx-auto pt-2">
+          <div className="p-8 sm:p-10 lg:p-12 rounded-3xl bg-[#091124]/75 backdrop-blur-2xl border border-white/[0.08] shadow-[0_0_60px_rgba(59,130,246,0.12)] space-y-6 text-center w-full">
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-mono font-semibold uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-mono font-semibold uppercase tracking-wider">
                 <Sparkles className="w-3.5 h-3.5 text-blue-400" />
                 <span>Instant ATS Resume Scanner</span>
               </div>
-              <h2 className="text-2xl sm:text-4xl font-display font-extrabold text-white tracking-tight">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold text-white tracking-tight">
                 Analyze Your Resume
               </h2>
-              <p className="text-sm sm:text-base text-slate-400 leading-relaxed">
+              <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-xl mx-auto">
                 Upload your resume and discover how ready you are for your next opportunity.
               </p>
             </div>
 
             {error && (
-              <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs sm:text-sm flex items-center gap-2.5 text-left">
+              <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs sm:text-sm flex items-center gap-2.5 text-left">
                 <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
-            <div className="text-left space-y-1 max-w-md mx-auto">
+            {/* Target Role input */}
+            <div className="text-left space-y-1.5 max-w-md mx-auto">
               <label className="text-xs font-mono text-slate-400 font-medium">
                 Target Role Benchmark:
               </label>
@@ -166,16 +184,17 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
                 value={targetRole}
                 onChange={(e) => setTargetRole(e.target.value)}
                 placeholder="e.g. Software Engineer, AI Engineer"
-                className="w-full h-10 px-3.5 rounded-xl bg-[#091124] border border-white/[0.1] focus:border-blue-500 focus:outline-none text-white text-sm"
+                className="w-full h-11 px-4 rounded-xl bg-[#060B18] border border-white/[0.1] focus:border-blue-500 focus:outline-none text-white text-sm placeholder-slate-500"
               />
             </div>
 
+            {/* Drag & Drop Box (Darker inner glass) */}
             <div
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
-              className={`p-8 sm:p-10 rounded-2xl border-2 border-dashed transition-all cursor-pointer flex flex-col items-center justify-center space-y-3 ${isDragOver ? 'border-blue-500 bg-blue-500/10' : file ? 'border-emerald-500/60 bg-[#0C152E]' : 'border-white/[0.15] bg-[#091124] hover:bg-[#0D1833] hover:border-blue-500/50'}`}
+              className={`p-8 sm:p-10 rounded-2xl border-2 border-dashed transition-all cursor-pointer flex flex-col items-center justify-center space-y-3 ${isDragOver ? 'border-blue-500 bg-blue-500/10 scale-[1.01]' : file ? 'border-emerald-500/60 bg-[#070E20]' : 'border-white/[0.12] bg-[#060B18]/90 hover:bg-[#080E22] hover:border-blue-500/50'}`}
             >
               <input
                 type="file"
@@ -217,12 +236,13 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
               </span>
             </div>
 
+            {/* Action Button */}
             <div className="pt-2 flex flex-col items-center">
               <button
                 type="button"
                 onClick={handleAnalyze}
                 disabled={!file || isAnalyzing}
-                className="w-full sm:w-auto min-w-[240px] h-13 px-8 rounded-full bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-sm text-white shadow-[0_0_28px_rgba(59,130,246,0.4)] hover:shadow-[0_0_40px_rgba(59,130,246,0.65)] transition-all flex items-center justify-center gap-2.5 cursor-pointer"
+                className="w-full sm:w-auto min-w-[260px] h-13 px-8 rounded-full bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-sm text-white shadow-[0_0_30px_rgba(59,130,246,0.45)] hover:shadow-[0_0_45px_rgba(59,130,246,0.7)] transition-all flex items-center justify-center gap-2.5 cursor-pointer"
               >
                 {isAnalyzing ? (
                   <>
@@ -236,13 +256,13 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
                   </>
                 )}
               </button>
-              <p className="text-xs text-slate-500 font-mono mt-2.5">
+              <p className="text-xs text-slate-400 font-mono mt-2.5">
                 Get your ATS score instantly — no login required.
               </p>
             </div>
           </div>
         ) : (
-          <div className="space-y-8 animate-fadeIn">
+          <div className="p-8 sm:p-10 lg:p-12 rounded-3xl bg-[#091124]/75 backdrop-blur-2xl border border-white/[0.08] shadow-[0_0_60px_rgba(59,130,246,0.12)] space-y-8 w-full animate-fadeIn">
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
               <div>
                 <div className="flex items-center gap-1.5 text-xs font-mono text-blue-400 uppercase tracking-wider mb-1">
@@ -268,12 +288,12 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
-              <div className="md:col-span-5 p-6 rounded-2xl bg-[#091124] border border-blue-500/30 flex flex-col items-center justify-center text-center space-y-4">
+              <div className="md:col-span-5 p-6 rounded-2xl bg-[#060B18]/90 border border-blue-500/30 flex flex-col items-center justify-center text-center space-y-4">
                 <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">
                   YOUR ATS SCORE
                 </span>
                 
-                <div className="w-32 h-32 rounded-full border-4 border-blue-500/25 flex flex-col items-center justify-center bg-[#0C152E] shadow-[0_0_40px_rgba(59,130,246,0.2)]">
+                <div className="w-32 h-32 rounded-full border-4 border-blue-500/25 flex flex-col items-center justify-center bg-[#091124] shadow-[0_0_40px_rgba(59,130,246,0.2)]">
                   <span className="text-4xl sm:text-5xl font-display font-black text-white">
                     {analysisResult.atsScore}
                   </span>
@@ -287,7 +307,7 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
                 </span>
               </div>
 
-              <div className="md:col-span-7 p-6 rounded-2xl bg-[#091124] border border-white/[0.08] space-y-3.5">
+              <div className="md:col-span-7 p-6 rounded-2xl bg-[#060B18]/90 border border-white/[0.08] space-y-3.5">
                 <span className="text-xs font-bold text-white uppercase tracking-wider">
                   Category Breakdown
                 </span>
@@ -358,7 +378,12 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
             </div>
           </div>
         )}
-      </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="w-full max-w-7xl mx-auto py-4 px-4 sm:px-8 text-center text-xs text-slate-500 font-mono relative z-20">
+        <p>© 2026 Career Engine AI. All rights reserved.</p>
+      </footer>
     </div>
   );
 };
