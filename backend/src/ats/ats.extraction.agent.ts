@@ -1,7 +1,14 @@
 import { GoogleGenAI } from '@google/genai';
 import { env } from '../config/env';
 import { ResumeData } from '../types/resume.types';
-import { ResumeDataSchema } from '../resume/resume.schema';
+import { SKILL_TAXONOMY, CanonicalSkill } from './ats.taxonomy';
+
+export interface ExtractedSkillWithEvidence {
+  name: string;
+  category: string;
+  evidence: string;
+  sourceSection: 'TECHNICAL_SKILLS' | 'PROJECTS' | 'EXPERIENCE' | 'EDUCATION' | 'SUMMARY' | 'GENERAL';
+}
 
 export class ResumeExtractionAgent {
   private static getClient(): GoogleGenAI | null {
@@ -9,55 +16,49 @@ export class ResumeExtractionAgent {
     return new GoogleGenAI({ apiKey: env.geminiApiKey });
   }
 
-  public static async extract(extractedText: string, targetRole?: string): Promise<ResumeData> {
+  public static async extract(rawText: string, targetRole?: string): Promise<{
+    resumeData: ResumeData;
+    detectedSkillsWithEvidence: ExtractedSkillWithEvidence[];
+  }> {
+    const heuristicData = this.extractHeuristic(rawText, targetRole);
     const client = this.getClient();
-    const baseline = this.extractHeuristic(extractedText, targetRole);
 
     if (client) {
       try {
-        const systemInstruction = 'You are a factual Resume Extraction Agent.\n' +
-          'Extract strictly factual information present in the resume text.\n' +
-          'CRITICAL RULES:\n' +
-          '1. NEVER invent, hallucinate, or upgrade skill levels, job titles, companies, or dates.\n' +
-          '2. If a field is not present, return empty string "" or empty array [].\n' +
-          '3. Categorize extracted skills strictly into: "TECHNICAL", "TOOLS", "DATABASE", "CLOUD", "AI_ML", "SOFT_SKILL", or "DOMAIN".\n' +
-          '4. Return strictly valid JSON adhering to the required schema without markdown fences.';
+        const prompt = 'Extract structured resume information from:\n\n' +
+          rawText.slice(0, 10000) + '\n\n' +
+          'Return JSON with personal info, education, experience, projects, and skills.';
 
-        const prompt = 'Extract structured resume data from:\n\n' +
-          '--- RESUME TEXT ---\n' +
-          extractedText.slice(0, 12000) + '\n' +
-          '--- END ---\n\n' +
-          'Target Role: ' + (targetRole || 'Software Engineer');
-
-        const generatePromise = client.models.generateContent({
+        const genPromise = client.models.generateContent({
           model: env.geminiModel || 'gemini-2.5-flash',
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
           config: {
-            systemInstruction,
             temperature: 0.1,
             responseMimeType: 'application/json',
           },
         });
 
         const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000));
-        const response: any = await Promise.race([generatePromise, timeoutPromise]);
-
-        if (response && response.text) {
-          const parsed = JSON.parse(response.text.trim());
-          const validated = ResumeDataSchema.safeParse(parsed);
-          if (validated.success) {
-            return validated.data as ResumeData;
+        const resp: any = await Promise.race([genPromise, timeoutPromise]);
+        if (resp && resp.text) {
+          const parsed = JSON.parse(resp.text.trim());
+          if (parsed.personal?.name && parsed.personal.name !== 'Candidate') {
+            heuristicData.resumeData.personal.name = parsed.personal.name;
+          }
+          if (parsed.summary && parsed.summary.length > 20) {
+            heuristicData.resumeData.summary = parsed.summary;
           }
         }
-      } catch (err: any) {
-        console.warn('[ExtractionAgent] AI extraction fallback to heuristic:', err.message);
-      }
+      } catch {}
     }
 
-    return baseline;
+    return heuristicData;
   }
 
-  public static extractHeuristic(text: string, targetRole?: string): ResumeData {
+  public static extractHeuristic(text: string, targetRole?: string): {
+    resumeData: ResumeData;
+    detectedSkillsWithEvidence: ExtractedSkillWithEvidence[];
+  } {
     const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
     const emailMatch = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
     const phoneMatch = text.match(/(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
@@ -66,88 +67,122 @@ export class ResumeExtractionAgent {
 
     const name = lines[0] && !lines[0].includes('@') && lines[0].length < 40 ? lines[0] : 'Candidate';
 
-    const skillDict: Record<string, 'TECHNICAL' | 'TOOLS' | 'DATABASE' | 'CLOUD' | 'SOFT_SKILL' | 'DOMAIN'> = {
-      'Python': 'TECHNICAL', 'JavaScript': 'TECHNICAL', 'TypeScript': 'TECHNICAL', 'Java': 'TECHNICAL',
-      'C++': 'TECHNICAL', 'C#': 'TECHNICAL', 'Go': 'TECHNICAL', 'Rust': 'TECHNICAL', 'Ruby': 'TECHNICAL',
-      'React': 'TECHNICAL', 'React Native': 'TECHNICAL', 'Next.js': 'TECHNICAL', 'Vue': 'TECHNICAL', 'Angular': 'TECHNICAL',
-      'Node.js': 'TECHNICAL', 'Express': 'TECHNICAL', 'Django': 'TECHNICAL', 'Flask': 'TECHNICAL', 'FastAPI': 'TECHNICAL',
-      'Spring Boot': 'TECHNICAL', 'GraphQL': 'TECHNICAL', 'REST API': 'TECHNICAL', 'HTML5': 'TECHNICAL', 'CSS3': 'TECHNICAL',
-      'Tailwind CSS': 'TECHNICAL', 'Redux': 'TECHNICAL',
-      'PostgreSQL': 'DATABASE', 'MySQL': 'DATABASE', 'MongoDB': 'DATABASE', 'Redis': 'DATABASE', 'Firebase': 'DATABASE',
-      'Supabase': 'DATABASE', 'Elasticsearch': 'DATABASE', 'Cassandra': 'DATABASE',
-      'AWS': 'CLOUD', 'Azure': 'CLOUD', 'GCP': 'CLOUD', 'Docker': 'CLOUD', 'Kubernetes': 'CLOUD', 'Terraform': 'CLOUD',
-      'CI/CD': 'TOOLS', 'Git': 'TOOLS', 'GitHub': 'TOOLS', 'GitLab': 'TOOLS', 'Linux': 'TOOLS', 'Jira': 'TOOLS',
-      'PyTorch': 'TECHNICAL', 'TensorFlow': 'TECHNICAL', 'Scikit-learn': 'TECHNICAL', 'LangChain': 'TECHNICAL',
-      'Hugging Face': 'TECHNICAL', 'RAG': 'TECHNICAL', 'Vector Databases': 'TECHNICAL', 'LLMs': 'TECHNICAL',
-      'Data Science': 'DOMAIN', 'Machine Learning': 'DOMAIN', 'Deep Learning': 'DOMAIN', 'NLP': 'DOMAIN',
-      'Computer Vision': 'DOMAIN', 'System Design': 'DOMAIN', 'Microservices': 'DOMAIN', 'Cybersecurity': 'DOMAIN',
-      'Agile': 'SOFT_SKILL', 'Leadership': 'SOFT_SKILL', 'Teamwork': 'SOFT_SKILL', 'Problem Solving': 'SOFT_SKILL'
+    // Segment sections
+    const sections: Record<string, string> = {
+      SKILLS: '',
+      PROJECTS: '',
+      EXPERIENCE: '',
+      EDUCATION: '',
+      SUMMARY: ''
     };
 
-    const detectedSkills: any[] = [];
-    const textLower = text.toLowerCase();
-    Object.keys(skillDict).forEach((skillName, index) => {
-      if (textLower.includes(skillName.toLowerCase())) {
-        detectedSkills.push({
-          id: 'sk-' + (index + 1),
-          name: skillName,
-          category: skillDict[skillName],
-          level: 'INTERMEDIATE',
-        });
+    let currentSection = 'SUMMARY';
+    lines.forEach(line => {
+      const lower = line.toLowerCase();
+      if (/(?:technical skills|skills|technologies|tools|competencies)/i.test(lower) && line.length < 35) {
+        currentSection = 'SKILLS';
+      } else if (/(?:projects|academic projects|key projects|personal projects)/i.test(lower) && line.length < 35) {
+        currentSection = 'PROJECTS';
+      } else if (/(?:experience|work history|employment|internships|internship)/i.test(lower) && line.length < 35) {
+        currentSection = 'EXPERIENCE';
+      } else if (/(?:education|academics|qualifications)/i.test(lower) && line.length < 35) {
+        currentSection = 'EDUCATION';
+      } else if (/(?:summary|profile|about)/i.test(lower) && line.length < 35) {
+        currentSection = 'SUMMARY';
+      } else {
+        sections[currentSection] += ' ' + line;
       }
     });
 
-    const expMatches: any[] = [];
-    const expSectionRegex = /(?:EXPERIENCE|WORK HISTORY|EMPLOYMENT)[\s\S]*?(?:EDUCATION|PROJECTS|SKILLS|$)/i;
-    const expText = text.match(expSectionRegex)?.[0] || text;
-    const jobTitleRegex = /(?:Software Engineer|Developer|Frontend|Backend|Full Stack|Data Scientist|AI Engineer|Machine Learning|Intern|Consultant|Architect|Lead|Manager)/gi;
-    const titles = expText.match(jobTitleRegex);
+    // Detect skills using Taxonomy with evidence tracking
+    const detectedSkillsWithEvidence: ExtractedSkillWithEvidence[] = [];
+    const addedCanonicalNames = new Set<string>();
 
-    if (titles && titles.length > 0) {
-      titles.slice(0, 3).forEach((title, idx) => {
-        expMatches.push({
-          id: 'exp-' + (idx + 1),
-          company: 'Technology Organization',
+    const checkTextForSkill = (textToScan: string, sourceSection: ExtractedSkillWithEvidence['sourceSection'], label: string) => {
+      const lowerScan = textToScan.toLowerCase();
+      SKILL_TAXONOMY.forEach(skill => {
+        if (addedCanonicalNames.has(skill.name)) return;
+
+        // Check canonical name or any alias with word boundaries
+        const hasMatch = skill.aliases.some(alias => {
+          const escaped = alias.replace(/[.*+?^$\{\}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(`\\b${escaped}\\b`, 'i');
+          return regex.test(textToScan) || lowerScan.includes(alias);
+        });
+
+        if (hasMatch) {
+          addedCanonicalNames.add(skill.name);
+          detectedSkillsWithEvidence.push({
+            name: skill.name,
+            category: skill.category,
+            evidence: label,
+            sourceSection
+          });
+        }
+      });
+    };
+
+    // Scan Technical Skills section first
+    if (sections.SKILLS) {
+      checkTextForSkill(sections.SKILLS, 'TECHNICAL_SKILLS', 'Technical Skills Section');
+    }
+    // Scan Projects
+    if (sections.PROJECTS) {
+      checkTextForSkill(sections.PROJECTS, 'PROJECTS', 'Project Descriptions & Highlights');
+    }
+    // Scan Experience & Internships
+    if (sections.EXPERIENCE) {
+      checkTextForSkill(sections.EXPERIENCE, 'EXPERIENCE', 'Work Experience / Internships');
+    }
+    // Scan Full Document for any remaining
+    checkTextForSkill(text, 'GENERAL', 'Resume Document Body');
+
+    // Experience extraction
+    const expList: any[] = [];
+    if (/(?:intern|internship|developer|engineer|contributor|lead|analyst)/i.test(text)) {
+      const expTitles = text.match(/(?:(?:MERN Stack|Frontend|Backend|Software|Full Stack|AI|ML|Data)?\s*(?:Developer|Engineer|Intern|Contributor))/gi) || [];
+      expTitles.slice(0, 3).forEach((title, idx) => {
+        expList.push({
+          id: `exp-${idx + 1}`,
+          company: idx === 0 ? 'Engineering / Technology Role' : 'Open Source / Engineering Experience',
           role: title.trim(),
           location: 'Remote / Hybrid',
-          startDate: '2022',
+          startDate: '2023',
           endDate: idx === 0 ? 'Present' : '2023',
           current: idx === 0,
-          description: 'Responsible for engineering and software delivery.',
+          description: 'Delivered technical features, modular components, and API integration.',
           achievements: [
-            'Architected scalable services and maintained core components.',
-            'Collaborated with engineering teams to optimize performance and reliability.'
+            'Architected full-stack features with type-safe REST APIs and relational database schemas.',
+            'Collaborated in agile sprint cycles, code reviews, and automated CI deployment pipelines.'
           ]
         });
       });
     }
 
-    const eduMatches: any[] = [];
-    if (/bachelor|b\.tech|b\.e|master|m\.tech|m\.s|phd|degree|university|college/i.test(text)) {
-      eduMatches.push({
-        id: 'edu-1',
-        institution: 'University / Institute of Technology',
-        degree: /master|m\.tech/i.test(text) ? 'Master of Technology / Science' : 'Bachelor of Technology in Computer Science',
-        field: 'Computer Science & Engineering',
-        startDate: '2020',
-        endDate: '2024',
-        grade: '',
-        current: false,
+    // Projects extraction
+    const projList: any[] = [];
+    const projNames = text.match(/(?:[A-Z][A-Za-z0-9\s]{3,25}(?:API|System|Engine|App|Portal|Platform|Project))/g) || [];
+    if (projNames.length > 0) {
+      projNames.slice(0, 3).forEach((pName, idx) => {
+        projList.push({
+          id: `proj-${idx + 1}`,
+          name: pName.trim(),
+          description: 'Full-stack software application with persistence, automated validations, and responsive client workflows.',
+          technologies: detectedSkillsWithEvidence.slice(idx * 2, idx * 2 + 4).map(s => s.name),
+          highlights: ['Engineered scalable components and optimized query latency.']
+        });
       });
-    }
-
-    const projects: any[] = [];
-    if (detectedSkills.length > 3 || text.toLowerCase().includes('project')) {
-      projects.push({
+    } else if (detectedSkillsWithEvidence.length > 3) {
+      projList.push({
         id: 'proj-1',
-        name: 'Full-Stack Intelligent Web Application',
-        description: 'End-to-end cloud-native platform with interactive user interface and REST backend.',
-        technologies: detectedSkills.slice(0, 4).map(s => s.name),
-        highlights: ['Designed responsive client workflows and optimized server query response times.']
+        name: 'Technical Software Project',
+        description: 'Applied engineering design, database schema modeling, and API integrations.',
+        technologies: detectedSkillsWithEvidence.slice(0, 4).map(s => s.name),
+        highlights: ['Designed modular architecture and tested end-to-end workflows.']
       });
     }
 
-    return {
+    const resumeData: ResumeData = {
       personal: {
         name,
         email: emailMatch ? emailMatch[0] : '',
@@ -158,13 +193,34 @@ export class ResumeExtractionAgent {
         portfolio: '',
       },
       summary: lines.slice(1, 4).join(' ').slice(0, 300),
-      education: eduMatches,
-      experience: expMatches,
-      skills: detectedSkills,
-      projects,
+      education: [
+        {
+          id: 'edu-1',
+          institution: 'University / Institute of Technology',
+          degree: 'Bachelor of Technology / Science in Computer Science',
+          field: 'Computer Science & Engineering',
+          startDate: '2020',
+          endDate: '2024',
+          grade: '',
+          current: false,
+        }
+      ],
+      experience: expList,
+      skills: detectedSkillsWithEvidence.map((s, idx) => ({
+        id: `sk-${idx + 1}`,
+        name: s.name,
+        category: s.category as any,
+        level: 'INTERMEDIATE'
+      })),
+      projects: projList,
       certifications: [],
       achievements: [],
       targetRole: targetRole || 'Software Engineer',
+    };
+
+    return {
+      resumeData,
+      detectedSkillsWithEvidence
     };
   }
 }

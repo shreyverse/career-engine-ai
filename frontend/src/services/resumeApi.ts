@@ -81,7 +81,7 @@ export const resumeApi = {
     };
     strengths: string[];
     weaknesses: string[];
-    matchedSkills: string[];
+    matchedSkills: Array<string | { name: string; evidence?: string; isCore?: boolean }>;
     missingKeywords: string[];
     improvements: string[];
     recommendations: string[];

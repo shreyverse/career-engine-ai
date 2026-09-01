@@ -2,7 +2,7 @@ import { ResumeData } from '../types/resume.types';
 import { ATSScoreBreakdown, ATSMatchCategory } from '../types/ats.types';
 import { GeminiSemanticAnalysisResult } from './ats.semantic';
 import { ResumeQualityFindings } from './ats.quality.agent';
-import { JobRelevanceAnalysis } from './ats.relevance.agent';
+import { JobRelevanceAnalysis, MatchedSkillItem } from './ats.relevance.agent';
 
 export interface DeterministicATSReport {
   overallScore: number;
@@ -24,9 +24,10 @@ export interface DeterministicATSReport {
   };
   strengths: string[];
   weaknesses: string[];
-  matchedSkills: string[];
+  matchedSkills: MatchedSkillItem[];
   missingKeywords: string[];
   recommendations: string[];
+  targetRole: string;
 }
 
 export class ATSScoringEngine {
@@ -35,54 +36,62 @@ export class ATSScoringEngine {
     quality: ResumeQualityFindings,
     relevance: JobRelevanceAnalysis
   ): DeterministicATSReport {
+    // 6-Pillar Weighted Formula (100 Points Total)
+    // 1. ATS Structure & Parseability: 20%
     const atsParsingScore = quality.structureScore;
+
+    // 2. Target Skill Match: 30%
     const keywordScore = relevance.skillMatchPercentage;
+
+    // 3. Experience Relevance: 20%
     const expScore = relevance.experienceRelevanceScore;
+
+    // 4. Project Relevance: 15%
     const projScore = relevance.projectRelevanceScore;
+
+    // 5. Quantifiable Metrics & Achievement Quality: 10%
     const metricScore = quality.achievementScore;
+
+    // 6. Formatting & Cleanliness: 5%
     const formatScore = quality.formattingScore;
-    const completenessScore = quality.structureScore;
-    const contactScore = quality.hasContactInfo ? 100 : 40;
 
     const overallScore = Math.round(
       atsParsingScore * 0.20 +
-      keywordScore * 0.25 +
+      keywordScore * 0.30 +
       expScore * 0.20 +
-      projScore * 0.10 +
+      projScore * 0.15 +
       metricScore * 0.10 +
-      formatScore * 0.05 +
-      completenessScore * 0.05 +
-      contactScore * 0.05
+      formatScore * 0.05
     );
 
     const breakdownExplanations = {
       atsCompatibility: quality.hasContactInfo && quality.hasExperience
         ? 'Standard contact headers and clean chronological structure ensure seamless ATS text parsing.'
         : 'Missing standard contact links or section headers may reduce parsing fidelity in older ATS systems.',
-      
-      keywordMatch: relevance.matchedSkills.length >= 4
-        ? 'Contains ' + relevance.matchedSkills.length + ' core keywords matching ' + relevance.targetRole + ' benchmarks (' + relevance.matchedSkills.slice(0, 3).join(', ') + ').'
-        : 'Limited keyword density for ' + relevance.targetRole + '. Missing high-priority skills: ' + relevance.missingSkills.slice(0, 3).join(', ') + '.',
-      
-      experienceRelevance: resumeData.experience && resumeData.experience.length >= 2
-        ? 'Strong career trajectory across ' + resumeData.experience.length + ' roles with relevant engineering responsibilities.'
-        : 'Limited formal experience entries; consider adding internships, freelance, or open-source engagements.',
-      
+
+      keywordMatch: relevance.matchedSkills.length >= 6
+        ? `Verified ${relevance.matchedSkills.length} relevant technologies matching ${relevance.targetRole} requirements (${relevance.matchedSkills.slice(0, 4).map(s => s.name).join(', ')}).`
+        : `Contains ${relevance.matchedSkills.length} matched skills for ${relevance.targetRole}. Recommended to add proof of: ${relevance.missingSkills.slice(0, 3).join(', ')}.`,
+
+      experienceRelevance: resumeData.experience && resumeData.experience.length >= 1
+        ? `Relevant career engagements detected across ${resumeData.experience.length} roles/internships.`
+        : 'Limited formal work history entries; projects and academic achievements carry higher weighting.',
+
       projectRelevance: resumeData.projects && resumeData.projects.length >= 1
-        ? 'Demonstrates practical application with ' + resumeData.projects.length + ' portfolio projects highlighting relevant tooling.'
+        ? `Strong technical artifact demonstrations across ${resumeData.projects.length} project portfolios.`
         : 'Adding dedicated technical projects with GitHub repositories significantly boosts relevance.',
-      
+
       achievementQuality: quality.hasMetrics
-        ? 'Includes verifiable quantifiable achievements (' + quality.metricExamples.slice(0, 2).join(', ') + ').'
+        ? `Includes verifiable quantifiable achievements (${quality.metricExamples.slice(0, 2).join(', ')}).`
         : 'Bullet points lack numeric metrics; add quantified impact (e.g. "% speed improvement", "user count").'
     };
 
     const recommendations: string[] = [];
     if (!quality.hasMetrics) {
-      recommendations.push('Add quantifiable metrics to bullet points (e.g. "Scaled API throughput by 40% for 10k users").');
+      recommendations.push('Add quantifiable metrics to project/experience bullets (e.g. "Optimized API throughput by 35%").');
     }
     if (relevance.missingSkills.length > 0) {
-      recommendations.push('Incorporate genuine proof of ' + relevance.missingSkills.slice(0, 3).join(', ') + ' into project descriptions.');
+      recommendations.push(`Incorporate genuine proof of ${relevance.missingSkills.slice(0, 3).join(', ')} into your project descriptions.`);
     }
     if (!quality.hasSummary) {
       recommendations.push('Add a 2-sentence technical summary highlighting your core expertise and target role.');
@@ -93,6 +102,7 @@ export class ATSScoringEngine {
 
     return {
       overallScore: Math.min(99, Math.max(30, overallScore)),
+      targetRole: relevance.targetRole,
       breakdown: {
         atsCompatibility: atsParsingScore,
         keywordMatch: keywordScore,
@@ -100,7 +110,7 @@ export class ATSScoringEngine {
         projectRelevance: projScore,
         achievementQuality: metricScore,
         formatting: formatScore,
-        sectionCompleteness: completenessScore,
+        sectionCompleteness: atsParsingScore,
       },
       breakdownExplanations,
       strengths: quality.strengths,
@@ -200,4 +210,3 @@ export class ATSScoringEngine {
     };
   }
 }
-

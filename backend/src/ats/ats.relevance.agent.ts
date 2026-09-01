@@ -1,11 +1,21 @@
 import { ResumeData } from '../types/resume.types';
+import { getRoleBenchmark, RoleBenchmark } from './ats.benchmarks';
+import { ExtractedSkillWithEvidence } from './ats.extraction.agent';
+
+export interface MatchedSkillItem {
+  name: string;
+  evidence: string;
+  isCore: boolean;
+}
 
 export interface JobRelevanceAnalysis {
   targetRole: string;
-  isSpecificRole: boolean;
-  matchedSkills: string[];
+  benchmark: RoleBenchmark;
+  matchedSkills: MatchedSkillItem[];
   missingSkills: string[];
-  relevantSkillsCount: number;
+  matchedCount: number;
+  coreMatchedCount: number;
+  coreTotalCount: number;
   skillMatchPercentage: number;
   experienceRelevanceScore: number;
   projectRelevanceScore: number;
@@ -13,105 +23,126 @@ export interface JobRelevanceAnalysis {
 }
 
 export class JobRelevanceAgent {
-  private static readonly ROLE_BENCHMARKS: Record<string, { required: string[]; preferred: string[] }> = {
-    'ai engineer': {
-      required: ['Python', 'PyTorch', 'TensorFlow', 'LLMs', 'RAG', 'Vector Databases', 'LangChain', 'Deep Learning'],
-      preferred: ['FastAPI', 'Docker', 'AWS', 'Kubernetes', 'Hugging Face', 'NLP']
-    },
-    'machine learning engineer': {
-      required: ['Python', 'Scikit-learn', 'PyTorch', 'TensorFlow', 'Pandas', 'NumPy', 'Machine Learning', 'SQL'],
-      preferred: ['MLOps', 'Docker', 'AWS', 'Deep Learning', 'Kubernetes']
-    },
-    'data scientist': {
-      required: ['Python', 'SQL', 'Pandas', 'NumPy', 'Scikit-learn', 'Data Science', 'Machine Learning'],
-      preferred: ['Tableau', 'Power BI', 'R', 'PyTorch', 'BigQuery', 'Statistics']
-    },
-    'frontend developer': {
-      required: ['JavaScript', 'TypeScript', 'React', 'HTML5', 'CSS3', 'Tailwind CSS', 'Redux', 'REST API'],
-      preferred: ['Next.js', 'Vue', 'GraphQL', 'Jest', 'Webpack', 'Figma']
-    },
-    'backend developer': {
-      required: ['Node.js', 'TypeScript', 'Python', 'Java', 'REST API', 'SQL', 'PostgreSQL', 'MongoDB', 'Redis'],
-      preferred: ['Docker', 'Kubernetes', 'AWS', 'Microservices', 'GraphQL', 'CI/CD']
-    },
-    'full stack developer': {
-      required: ['React', 'TypeScript', 'JavaScript', 'Node.js', 'SQL', 'PostgreSQL', 'REST API', 'Git'],
-      preferred: ['Docker', 'AWS', 'Next.js', 'MongoDB', 'Tailwind CSS', 'CI/CD']
-    },
-    'devops engineer': {
-      required: ['Linux', 'Docker', 'Kubernetes', 'CI/CD', 'AWS', 'Terraform', 'Git', 'Python'],
-      preferred: ['Ansible', 'Prometheus', 'Grafana', 'Jenkins', 'GCP', 'Azure']
-    },
-    'software engineer': {
-      required: ['Data Structures', 'System Design', 'Git', 'SQL', 'REST API', 'JavaScript', 'Python', 'Java'],
-      preferred: ['Docker', 'React', 'Node.js', 'PostgreSQL', 'Microservices', 'CI/CD']
-    }
-  };
+  public static analyze(
+    resumeData: ResumeData,
+    detectedSkillsWithEvidence: ExtractedSkillWithEvidence[],
+    targetRole?: string
+  ): JobRelevanceAnalysis {
+    const benchmark = getRoleBenchmark(targetRole);
+    const detectedSkillMap = new Map<string, ExtractedSkillWithEvidence>();
 
-  public static analyze(resumeData: ResumeData, targetRole?: string): JobRelevanceAnalysis {
-    const roleNormalized = (targetRole || 'Software Engineer').trim().toLowerCase();
-    const isSpecificRole = Boolean(targetRole && targetRole.trim().length > 0);
+    detectedSkillsWithEvidence.forEach(item => {
+      detectedSkillMap.set(item.name.toLowerCase(), item);
+    });
 
-    let benchmarkKey = Object.keys(this.ROLE_BENCHMARKS).find(k => roleNormalized.includes(k)) || 'software engineer';
-    const benchmark = this.ROLE_BENCHMARKS[benchmarkKey];
+    const matchedSkills: MatchedSkillItem[] = [];
+    const matchedNamesSet = new Set<string>();
 
-    const resumeSkillNames = (resumeData.skills || []).map((s: any) => typeof s === 'string' ? s.toLowerCase() : (s?.name ? String(s.name).toLowerCase() : ''));
-    
-    const matchedSkills: string[] = [];
+    // 1. Check Core Skills
+    let coreMatchedCount = 0;
+    benchmark.coreSkills.forEach(coreSkill => {
+      const match = detectedSkillMap.get(coreSkill.toLowerCase());
+      if (match) {
+        coreMatchedCount++;
+        matchedNamesSet.add(coreSkill.toLowerCase());
+        matchedSkills.push({
+          name: coreSkill,
+          evidence: match.evidence,
+          isCore: true
+        });
+      }
+    });
+
+    // 2. Check Common Skills
+    benchmark.commonSkills.forEach(commonSkill => {
+      const match = detectedSkillMap.get(commonSkill.toLowerCase());
+      if (match && !matchedNamesSet.has(commonSkill.toLowerCase())) {
+        matchedNamesSet.add(commonSkill.toLowerCase());
+        matchedSkills.push({
+          name: commonSkill,
+          evidence: match.evidence,
+          isCore: false
+        });
+      }
+    });
+
+    // 3. Include any other detected technical skills that belong to the relevant taxonomy
+    detectedSkillsWithEvidence.forEach(item => {
+      if (!matchedNamesSet.has(item.name.toLowerCase())) {
+        matchedNamesSet.add(item.name.toLowerCase());
+        matchedSkills.push({
+          name: item.name,
+          evidence: item.evidence,
+          isCore: false
+        });
+      }
+    });
+
+    // 4. Construct Missing Skills (ONLY skills in the benchmark that are NOT in matchedSkills)
     const missingSkills: string[] = [];
-
-    benchmark.required.forEach(skill => {
-      if (resumeSkillNames.some(rs => rs.includes(skill.toLowerCase()) || skill.toLowerCase().includes(rs))) {
-        matchedSkills.push(skill);
-      } else {
+    benchmark.coreSkills.forEach(skill => {
+      if (!matchedNamesSet.has(skill.toLowerCase())) {
+        missingSkills.push(skill);
+      }
+    });
+    benchmark.commonSkills.forEach(skill => {
+      if (!matchedNamesSet.has(skill.toLowerCase()) && missingSkills.length < 8) {
         missingSkills.push(skill);
       }
     });
 
-    benchmark.preferred.forEach(skill => {
-      if (resumeSkillNames.some(rs => rs.includes(skill.toLowerCase()) || skill.toLowerCase().includes(rs))) {
-        if (!matchedSkills.includes(skill)) matchedSkills.push(skill);
-      } else {
-        if (!missingSkills.includes(skill) && missingSkills.length < 6) missingSkills.push(skill);
-      }
-    });
+    // Guaranteed Non-Contradiction Check
+    // If a skill is in matchedSkills, it CANNOT be in missingSkills
+    const cleanMissingSkills = missingSkills.filter(missing =>
+      !matchedSkills.some(m => m.name.toLowerCase() === missing.toLowerCase())
+    );
 
-    const totalBenchmarkSkills = benchmark.required.length;
-    const matchRatio = matchedSkills.length / Math.max(1, totalBenchmarkSkills);
-    const skillMatchPercentage = Math.min(98, Math.max(35, Math.round(matchRatio * 85) + 15));
+    // Calculate Skill Match Score (Weighted: Core skills 70%, Common skills 30%)
+    const coreRatio = coreMatchedCount / Math.max(1, benchmark.coreSkills.length);
+    const totalBenchmarkCount = benchmark.coreSkills.length + benchmark.commonSkills.length;
+    const overallRatio = matchedSkills.length / Math.max(1, totalBenchmarkCount);
 
-    let experienceRelevanceScore = 50;
+    let skillMatchPercentage = Math.round((coreRatio * 65) + (overallRatio * 35));
+    if (matchedSkills.length >= 8) skillMatchPercentage = Math.max(82, skillMatchPercentage);
+    if (matchedSkills.length >= 12) skillMatchPercentage = Math.max(92, skillMatchPercentage);
+    skillMatchPercentage = Math.min(98, Math.max(35, skillMatchPercentage));
+
+    // Experience Relevance
+    let experienceRelevanceScore = 55;
     const expCount = resumeData.experience?.length || 0;
-    if (expCount >= 3) experienceRelevanceScore = 90;
-    else if (expCount === 2) experienceRelevanceScore = 80;
-    else if (expCount === 1) experienceRelevanceScore = 70;
-    if (matchedSkills.length >= 4) experienceRelevanceScore += 10;
+    if (expCount >= 2) experienceRelevanceScore = 88;
+    else if (expCount === 1) experienceRelevanceScore = 78;
+    if (matchedSkills.length >= 6) experienceRelevanceScore += 8;
     experienceRelevanceScore = Math.min(96, experienceRelevanceScore);
 
-    let projectRelevanceScore = 55;
+    // Project Relevance
+    let projectRelevanceScore = 60;
     const projCount = resumeData.projects?.length || 0;
-    if (projCount >= 2) projectRelevanceScore += 30;
-    else if (projCount === 1) projectRelevanceScore += 15;
-    projectRelevanceScore = Math.min(95, projectRelevanceScore);
+    if (projCount >= 2) projectRelevanceScore = 90;
+    else if (projCount === 1) projectRelevanceScore = 80;
+    projectRelevanceScore = Math.min(96, projectRelevanceScore);
 
     let explanation = '';
-    const roleTitle = targetRole || 'Software Engineer';
-    if (matchedSkills.length >= 5) {
-      explanation = 'Strong keyword alignment with ' + roleTitle + ' hiring benchmarks, matching ' + matchedSkills.length + ' key technologies.';
+    if (matchedSkills.length >= 8) {
+      explanation = `Exceptional skill alignment with ${benchmark.roleName} hiring standards. Verified ${matchedSkills.length} relevant technologies across technical sections, projects, and work history.`;
+    } else if (matchedSkills.length >= 4) {
+      explanation = `Solid foundational alignment with ${benchmark.roleName} benchmarks (${matchedSkills.length} skills verified). Adding proof for ${cleanMissingSkills.slice(0, 3).join(', ')} will elevate competitiveness.`;
     } else {
-      explanation = 'Matches ' + matchedSkills.length + ' relevant technologies for ' + roleTitle + '. Lacks high-demand competencies such as ' + missingSkills.slice(0, 3).join(', ') + '.';
+      explanation = `Limited technical keyword overlap for ${benchmark.roleName} (${matchedSkills.length} matched). Recommended focus: ${cleanMissingSkills.slice(0, 4).join(', ')}.`;
     }
 
     return {
-      targetRole: roleTitle,
-      isSpecificRole,
+      targetRole: benchmark.roleName,
+      benchmark,
       matchedSkills,
-      missingSkills,
-      relevantSkillsCount: matchedSkills.length,
+      missingSkills: cleanMissingSkills,
+      matchedCount: matchedSkills.length,
+      coreMatchedCount,
+      coreTotalCount: benchmark.coreSkills.length,
       skillMatchPercentage,
       experienceRelevanceScore,
       projectRelevanceScore,
-      explanation,
+      explanation
     };
   }
 }

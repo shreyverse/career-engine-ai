@@ -9,6 +9,7 @@ import fs from 'fs';
 export interface FullATSPipelineResult extends DeterministicATSReport {
   fileName: string;
   parsedData: any;
+  atsScore: number;
   categoryScores: {
     atsCompatibility: number;
     skillsMatch: number;
@@ -25,12 +26,23 @@ export class ATSPipeline {
     targetRole?: string
   ): Promise<FullATSPipelineResult> {
     const rawText = await ResumeParser.extractTextFromFile(file.path, file.originalname);
-    const resumeData = await ResumeExtractionAgent.extract(rawText, targetRole);
+
+    // 1. Agent 1: Resume Extraction Agent
+    const { resumeData, detectedSkillsWithEvidence } = await ResumeExtractionAgent.extract(rawText, targetRole);
+
+    // 2. Agent 2: Quality & Structure Agent
     const quality = ResumeQualityAgent.evaluate(resumeData, rawText);
-    const relevance = JobRelevanceAgent.analyze(resumeData, targetRole);
+
+    // 3. Agent 3 & 4: Keyword & Job Relevance Agent
+    const relevance = JobRelevanceAgent.analyze(resumeData, detectedSkillsWithEvidence, targetRole);
+
+    // 4. Agent 5: Deterministic Scoring Engine
     const initialReport = ATSScoringEngine.calculate(resumeData, quality, relevance);
+
+    // 5. Agent 6: Critic & Validation Agent
     const finalReport = ATSCriticAgent.validate(initialReport, resumeData, rawText);
 
+    // Clean up temporary file
     try {
       if (fs.existsSync(file.path)) {
         fs.unlinkSync(file.path);
@@ -40,6 +52,7 @@ export class ATSPipeline {
     return {
       fileName: file.originalname,
       parsedData: resumeData,
+      targetRole: finalReport.targetRole,
       overallScore: finalReport.overallScore,
       atsScore: finalReport.overallScore,
       breakdown: finalReport.breakdown,
