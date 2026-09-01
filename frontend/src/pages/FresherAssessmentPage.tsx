@@ -393,10 +393,10 @@ export const FresherAssessmentPage: React.FC = () => {
   const skillLevelOrder: SkillLevel[] = ['BEGINNER', 'BASIC', 'INTERMEDIATE', 'ADVANCED'];
 
   return (
-    <div className='min-h-screen bg-[#050608] text-white py-10 px-4 sm:px-8 lg:px-12 relative overflow-hidden flex flex-col justify-between'>
+    <div className='min-h-screen bg-background text-text py-10 px-4 sm:px-8 lg:px-12 relative subtle-radial-glow flex flex-col justify-between'>
       {/* Ambient background glow */}
       <div className='absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[1200px] h-[500px] bg-gradient-to-b from-blue-600/10 via-indigo-600/5 to-transparent blur-[140px] pointer-events-none rounded-full' />
-      <div className='absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] [background-size:32px_32px] opacity-40 pointer-events-none' />
+      <div className='absolute inset-0 subtle-grid-bg opacity-30 pointer-events-none' />
 
       <div className='w-full max-w-[1400px] mx-auto space-y-8 relative z-10'>
         {/* Header */}

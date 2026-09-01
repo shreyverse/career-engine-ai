@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { GraduationCap, Briefcase, Compass, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Badge } from "../components/ui/Badge";
+import { Spinner } from "../components/ui/Spinner";
 import { Alert } from "../components/ui/Alert";
 import { useAuth } from "../hooks/useAuth";
 
@@ -73,14 +74,14 @@ export const OnboardingPage: React.FC = () => {
 
         {/* Dual Cards Centered Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left pt-2 w-full">
-          {/* Option 1 — Fresher */}
+                    {/* Option 1 — Fresher */}
           <div
-            onClick={() => handleSelectStage("FRESHER")}
+            onClick={() => !isLoading && handleSelectStage("FRESHER")}
             className={`p-6 sm:p-8 rounded-2xl border transition-all cursor-pointer relative group flex flex-col justify-between ${
               selectedStage === "FRESHER"
-                ? "bg-surface-elevated border-primary shadow-elevated-card"
+                ? "bg-surface-elevated border-primary shadow-elevated-card ring-1 ring-primary/40"
                 : "bg-surface hover:bg-surface-elevated border-border hover:border-primary/50"
-            }`}
+            } ${isLoading && selectedStage === "FRESHER" ? "opacity-90" : ""}`}
           >
             <div>
               <div className="flex items-center justify-between mb-5">
@@ -105,7 +106,7 @@ export const OnboardingPage: React.FC = () => {
                   {["Student", "Recent Graduate", "Looking for First Job", "Self-Taught"].map((tag) => (
                     <span
                       key={tag}
-                      className="px-2.5 py-1 rounded-md bg-surface-elevated text-text-muted border border-border text-xs"
+                      className="px-2.5 py-1 rounded-md bg-surface-highlight text-text-muted border border-border text-xs font-medium"
                     >
                       {tag}
                     </span>
@@ -115,19 +116,27 @@ export const OnboardingPage: React.FC = () => {
             </div>
 
             <div className="mt-8 pt-4 border-t border-border flex items-center justify-between text-xs font-semibold text-primary">
-              <span>Start 6-Step Fresher Assessment</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              {isLoading && selectedStage === "FRESHER" ? (
+                <span className="flex items-center gap-2 text-primary-light">
+                  <Spinner size="sm" /> Initializing Fresher Track...
+                </span>
+              ) : (
+                <>
+                  <span>Start 6-Step Fresher Assessment</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
             </div>
           </div>
 
           {/* Option 2 — Professional */}
           <div
-            onClick={() => handleSelectStage("PROFESSIONAL")}
+            onClick={() => !isLoading && handleSelectStage("PROFESSIONAL")}
             className={`p-6 sm:p-8 rounded-2xl border transition-all cursor-pointer relative group flex flex-col justify-between ${
               selectedStage === "PROFESSIONAL"
-                ? "bg-surface-elevated border-secondary shadow-elevated-card"
+                ? "bg-surface-elevated border-secondary shadow-elevated-card ring-1 ring-secondary/40"
                 : "bg-surface hover:bg-surface-elevated border-border hover:border-secondary/50"
-            }`}
+            } ${isLoading && selectedStage === "PROFESSIONAL" ? "opacity-90" : ""}`}
           >
             <div>
               <div className="flex items-center justify-between mb-5">
@@ -152,7 +161,7 @@ export const OnboardingPage: React.FC = () => {
                   {["Working Professional", "Promotion", "Company Switch", "Domain Switch"].map((tag) => (
                     <span
                       key={tag}
-                      className="px-2.5 py-1 rounded-md bg-surface-elevated text-text-muted border border-border text-xs"
+                      className="px-2.5 py-1 rounded-md bg-surface-highlight text-text-muted border border-border text-xs font-medium"
                     >
                       {tag}
                     </span>
@@ -162,8 +171,16 @@ export const OnboardingPage: React.FC = () => {
             </div>
 
             <div className="mt-8 pt-4 border-t border-border flex items-center justify-between text-xs font-semibold text-secondary">
-              <span>Start 6-Step Professional Assessment</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              {isLoading && selectedStage === "PROFESSIONAL" ? (
+                <span className="flex items-center gap-2 text-secondary-light">
+                  <Spinner size="sm" /> Initializing Professional Track...
+                </span>
+              ) : (
+                <>
+                  <span>Start 6-Step Professional Assessment</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
             </div>
           </div>
         </div>
