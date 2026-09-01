@@ -126,25 +126,27 @@ export const PublicResumeAnalyzerPage: React.FC = () => {
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[1400px] h-[550px] bg-gradient-to-b from-blue-600/20 via-indigo-600/10 to-transparent blur-[160px] pointer-events-none rounded-full" />
       <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:28px_28px] opacity-60 pointer-events-none" />
 
-      {/* Top Header */}
-      <header className="w-full max-w-7xl mx-auto flex items-center justify-between py-6 px-4 sm:px-8 border-b border-white/[0.08] relative z-10">
-        <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl bg-[#0E1730] border border-white/[0.12] flex items-center justify-center text-blue-400 group-hover:border-blue-500/50 transition-colors shadow-subtle-glow">
-            <Compass className="w-5 h-5 text-blue-400" />
-          </div>
-          <span className="font-display font-bold text-xl text-white tracking-tight">Career Engine</span>
-        </Link>
-
-        <div className="flex items-center gap-4">
-          <span className="text-xs sm:text-sm font-mono text-slate-400 hidden sm:inline-block">
-            Instant AI Evaluation
-          </span>
-          <Link
-            to="/login"
-            className="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-200 hover:text-white bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.1] transition-all"
-          >
-            Sign In
+      {/* Top Header - 100% Full Width */}
+      <header className="w-full border-b border-white/[0.08] relative z-20">
+        <div className="w-full flex items-center justify-between py-5 px-6 sm:px-8 md:px-12">
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-9 h-9 rounded-xl bg-[#0E1730] border border-white/[0.12] flex items-center justify-center text-blue-400 group-hover:border-blue-500/50 transition-colors shadow-subtle-glow">
+              <Compass className="w-5 h-5 text-blue-400" />
+            </div>
+            <span className="font-display font-bold text-xl text-white tracking-tight">Career Engine</span>
           </Link>
+
+          <div className="flex items-center gap-4">
+            <span className="text-xs sm:text-sm font-mono text-slate-400 hidden sm:inline-block">
+              Instant AI Evaluation
+            </span>
+            <Link
+              to="/login"
+              className="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-200 hover:text-white bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.1] transition-all"
+            >
+              Sign In
+            </Link>
+          </div>
         </div>
       </header>
 

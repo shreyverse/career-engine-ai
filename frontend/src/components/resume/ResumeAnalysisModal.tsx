@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import {
   X,
@@ -134,7 +135,8 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
 
   const currentScore = analysisResult ? (analysisResult.overallScore || analysisResult.atsScore) : 0;
 
-  return (
+  const modalElement = (
+
     <div className="fixed inset-0 z-50 overflow-y-auto bg-gradient-to-b from-[#070D1E] via-[#0A1329] to-[#060B18] text-white flex flex-col justify-between select-none animate-fadeIn">
       {/* Full-Screen Ambient Lighting */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[1400px] h-[550px] bg-gradient-to-b from-blue-600/15 via-indigo-600/10 to-transparent blur-[160px] pointer-events-none rounded-full" />
@@ -142,22 +144,24 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
       <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-600/15 blur-[140px] pointer-events-none rounded-full" />
       <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] [background-size:28px_28px] opacity-40 pointer-events-none" />
 
-      {/* Top Navigation Bar - Edge to Edge */}
-      <header className="w-full flex items-center justify-between py-5 px-6 sm:px-10 lg:px-12 border-b border-white/[0.06] relative z-20">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#0E1730] border border-white/[0.12] flex items-center justify-center text-blue-400 shadow-subtle-glow">
-            <Compass className="w-5 h-5 text-blue-400" />
+      {/* Top Navigation Bar - 100% Full Width of Viewport */}
+      <header className="w-full border-b border-white/[0.08] relative z-20">
+        <div className="w-full flex items-center justify-between py-5 px-6 sm:px-8 md:px-12">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#0E1730] border border-white/[0.12] flex items-center justify-center text-blue-400 shadow-subtle-glow">
+              <Compass className="w-5 h-5 text-blue-400" />
+            </div>
+            <span className="font-display font-bold text-xl text-white tracking-tight">Career Engine</span>
           </div>
-          <span className="font-display font-bold text-xl text-white tracking-tight">Career Engine</span>
-        </div>
 
-        <button
-          type="button"
-          onClick={onClose}
-          className="w-10 h-10 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.1] text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-md"
-        >
-          <X className="w-5 h-5" />
-        </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-10 h-10 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.1] text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-md"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
       </header>
 
       {/* Main Analysis Container - Edge to Edge Width */}
@@ -548,4 +552,5 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
       </footer>
     </div>
   );
+  return typeof document !== "undefined" ? createPortal(modalElement, document.body) : modalElement;
 };
