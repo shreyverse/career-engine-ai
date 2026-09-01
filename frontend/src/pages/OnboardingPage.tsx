@@ -82,8 +82,8 @@ export const OnboardingPage: React.FC = () => {
             onClick={() => !isLoading && handleSelectStage("FRESHER")}
             className={`p-6 sm:p-8 rounded-2xl border transition-all duration-200 cursor-pointer relative flex flex-col justify-between ${
               selectedStage === "FRESHER"
-                ? "bg-[#0F172A] border-blue-500 ring-2 ring-blue-500/50 shadow-[0_0_30px_rgba(59,130,246,0.2)]"
-                : "bg-[#0B1020] border-white/[0.08] hover:border-blue-500/50 hover:bg-[#0E1528] hover:shadow-[0_0_20px_rgba(59,130,246,0.1)]"
+                ? "bg-[#131E36] border-blue-500 ring-2 ring-blue-500/50 shadow-[0_0_30px_rgba(59,130,246,0.25)]"
+                : "bg-[#0F172A] border-white/[0.1] hover:border-blue-500/60 hover:bg-[#131E36] hover:shadow-[0_0_25px_rgba(59,130,246,0.15)] shadow-md"
             } ${isLoading && selectedStage === "FRESHER" ? "opacity-95" : ""}`}
           >
             <div className="space-y-4">
@@ -141,8 +141,8 @@ export const OnboardingPage: React.FC = () => {
             onClick={() => !isLoading && handleSelectStage("PROFESSIONAL")}
             className={`p-6 sm:p-8 rounded-2xl border transition-all duration-200 cursor-pointer relative flex flex-col justify-between ${
               selectedStage === "PROFESSIONAL"
-                ? "bg-[#0F172A] border-violet-500 ring-2 ring-violet-500/50 shadow-[0_0_30px_rgba(139,92,246,0.2)]"
-                : "bg-[#0B1020] border-white/[0.08] hover:border-violet-500/50 hover:bg-[#0E1528] hover:shadow-[0_0_20px_rgba(139,92,246,0.1)]"
+                ? "bg-[#131E36] border-violet-500 ring-2 ring-violet-500/50 shadow-[0_0_30px_rgba(139,92,246,0.25)]"
+                : "bg-[#0F172A] border-white/[0.1] hover:border-violet-500/60 hover:bg-[#131E36] hover:shadow-[0_0_25px_rgba(139,92,246,0.15)] shadow-md"
             } ${isLoading && selectedStage === "PROFESSIONAL" ? "opacity-95" : ""}`}
           >
             <div className="space-y-4">
