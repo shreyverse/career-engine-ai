@@ -30,22 +30,22 @@ export const OnboardingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-text py-6 px-6 sm:px-12 lg:px-16 relative subtle-radial-glow flex flex-col justify-between select-none">
+    <div className="min-h-screen bg-[#070B14] text-text py-6 px-6 sm:px-12 lg:px-16 relative subtle-radial-glow flex flex-col justify-between select-none">
       <div className="absolute inset-0 subtle-grid-bg opacity-30 pointer-events-none" />
 
       {/* Full-Width Top Header: Logo on Far Left, User Profile on Far Right */}
-      <header className="w-full flex items-center justify-between pb-5 border-b border-border/80 relative z-10">
+      <header className="w-full flex items-center justify-between pb-5 border-b border-white/[0.08] relative z-10">
         <Link to="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-surface-elevated border border-border flex items-center justify-center text-primary shadow-subtle-glow">
+          <div className="w-10 h-10 rounded-xl bg-[#0E1528] border border-white/[0.12] flex items-center justify-center text-primary shadow-subtle-glow">
             <Compass className="w-5 h-5 text-primary" />
           </div>
-          <span className="font-display font-bold text-xl text-text">Career Engine</span>
+          <span className="font-display font-bold text-xl text-white">Career Engine</span>
         </Link>
 
         <div className="flex items-center gap-3">
           {user && (
             <span className="text-xs font-mono text-text-muted hidden sm:inline-block">
-              Signed in as <strong className="text-text">{user.fullName}</strong>
+              Signed in as <strong className="text-white">{user.fullName}</strong>
             </span>
           )}
           <Badge variant="primary" size="md">
@@ -59,10 +59,10 @@ export const OnboardingPage: React.FC = () => {
         
         {/* Centered Hero Copy */}
         <div className="space-y-3 text-center max-w-2xl mx-auto">
-          <p className="text-xs font-mono uppercase tracking-widest text-primary-light font-semibold">
+          <p className="text-xs font-mono uppercase tracking-widest text-primary font-semibold">
             Stage 1 • Personalization Setup
           </p>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold text-text tracking-tight">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold text-white tracking-tight">
             What best describes your career stage?
           </h1>
           <p className="text-sm sm:text-base text-text-muted leading-relaxed">
@@ -78,10 +78,10 @@ export const OnboardingPage: React.FC = () => {
           {/* Option 1 — Fresher */}
           <div
             onClick={() => !isLoading && handleSelectStage("FRESHER")}
-            className={`p-6 sm:p-8 rounded-2xl border transition-all cursor-pointer relative group flex flex-col justify-between select-none ${
+            className={`p-6 sm:p-8 rounded-2xl border transition-all duration-200 cursor-pointer relative group flex flex-col justify-between select-none ${
               selectedStage === "FRESHER"
-                ? "bg-[#111A30] border-primary shadow-elevated-card ring-1 ring-primary/40"
-                : "bg-[#0B1020] hover:bg-[#0F172E] border-border/80 hover:border-primary/50"
+                ? "bg-gradient-to-b from-[#182444] to-[#0F172E] border-primary shadow-elevated-card ring-2 ring-primary/40"
+                : "bg-gradient-to-b from-[#111A30] to-[#0A1020] hover:from-[#16223E] hover:to-[#0E162B] border-white/[0.08] hover:border-primary/50 shadow-md"
             } ${isLoading && selectedStage === "FRESHER" ? "opacity-90" : ""}`}
           >
             <div>
@@ -92,22 +92,22 @@ export const OnboardingPage: React.FC = () => {
                 <Badge variant="primary">Early Career</Badge>
               </div>
 
-              <h2 className="text-2xl font-bold text-text mb-2 group-hover:text-primary-light transition-colors">
+              <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-primary-light transition-colors">
                 Fresher
               </h2>
               <p className="text-sm text-text-muted mb-6 leading-relaxed">
                 "I'm starting my career and want a clear path toward my first opportunity."
               </p>
 
-              <div className="pt-4 border-t border-border/60 space-y-2">
-                <div className="text-[11px] font-mono uppercase tracking-wider text-text-dim">
+              <div className="pt-4 border-t border-white/[0.08] space-y-2">
+                <div className="text-[11px] font-mono uppercase tracking-wider text-text-muted">
                   Ideal for:
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {["Student", "Recent Graduate", "Looking for First Job", "Self-Taught"].map((tag) => (
                     <span
                       key={tag}
-                      className="px-2.5 py-1 rounded-md bg-[#162038] text-[#94A3B8] border border-white/[0.06] text-xs font-medium"
+                      className="px-2.5 py-1 rounded-md bg-[#162038] text-[#BAC2D6] border border-white/[0.06] text-xs font-medium"
                     >
                       {tag}
                     </span>
@@ -116,7 +116,7 @@ export const OnboardingPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-8 pt-4 border-t border-border/60 flex items-center justify-between text-xs font-semibold text-primary">
+            <div className="mt-8 pt-4 border-t border-white/[0.08] flex items-center justify-between text-xs font-semibold text-primary">
               {isLoading && selectedStage === "FRESHER" ? (
                 <span className="flex items-center gap-2 text-primary-light">
                   <Spinner size="sm" /> Initializing Fresher Track...
@@ -133,10 +133,10 @@ export const OnboardingPage: React.FC = () => {
           {/* Option 2 — Professional */}
           <div
             onClick={() => !isLoading && handleSelectStage("PROFESSIONAL")}
-            className={`p-6 sm:p-8 rounded-2xl border transition-all cursor-pointer relative group flex flex-col justify-between select-none ${
+            className={`p-6 sm:p-8 rounded-2xl border transition-all duration-200 cursor-pointer relative group flex flex-col justify-between select-none ${
               selectedStage === "PROFESSIONAL"
-                ? "bg-[#111A30] border-secondary shadow-elevated-card ring-1 ring-secondary/40"
-                : "bg-[#0B1020] hover:bg-[#0F172E] border-border/80 hover:border-secondary/50"
+                ? "bg-gradient-to-b from-[#182444] to-[#0F172E] border-secondary shadow-elevated-card ring-2 ring-secondary/40"
+                : "bg-gradient-to-b from-[#111A30] to-[#0A1020] hover:from-[#16223E] hover:to-[#0E162B] border-white/[0.08] hover:border-secondary/50 shadow-md"
             } ${isLoading && selectedStage === "PROFESSIONAL" ? "opacity-90" : ""}`}
           >
             <div>
@@ -147,22 +147,22 @@ export const OnboardingPage: React.FC = () => {
                 <Badge variant="secondary">Experienced</Badge>
               </div>
 
-              <h2 className="text-2xl font-bold text-text mb-2 group-hover:text-secondary-light transition-colors">
+              <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-secondary-light transition-colors">
                 Professional
               </h2>
               <p className="text-sm text-text-muted mb-6 leading-relaxed">
                 "I'm already working and want to grow, switch or advance my career."
               </p>
 
-              <div className="pt-4 border-t border-border/60 space-y-2">
-                <div className="text-[11px] font-mono uppercase tracking-wider text-text-dim">
+              <div className="pt-4 border-t border-white/[0.08] space-y-2">
+                <div className="text-[11px] font-mono uppercase tracking-wider text-text-muted">
                   Ideal for:
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {["Working Professional", "Promotion", "Company Switch", "Domain Switch"].map((tag) => (
                     <span
                       key={tag}
-                      className="px-2.5 py-1 rounded-md bg-[#162038] text-[#94A3B8] border border-white/[0.06] text-xs font-medium"
+                      className="px-2.5 py-1 rounded-md bg-[#162038] text-[#BAC2D6] border border-white/[0.06] text-xs font-medium"
                     >
                       {tag}
                     </span>
@@ -171,7 +171,7 @@ export const OnboardingPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-8 pt-4 border-t border-border/60 flex items-center justify-between text-xs font-semibold text-secondary">
+            <div className="mt-8 pt-4 border-t border-white/[0.08] flex items-center justify-between text-xs font-semibold text-secondary">
               {isLoading && selectedStage === "PROFESSIONAL" ? (
                 <span className="flex items-center gap-2 text-secondary-light">
                   <Spinner size="sm" /> Initializing Professional Track...
