@@ -34,8 +34,8 @@ export const OnboardingPage: React.FC = () => {
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[1000px] h-[400px] bg-gradient-to-b from-blue-600/10 via-purple-600/5 to-transparent blur-[140px] pointer-events-none rounded-full" />
       <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] [background-size:28px_28px] opacity-40 pointer-events-none" />
 
-      {/* Header: Left is Career Engine, Right is Signed In User */}
-      <header className="w-full max-w-6xl mx-auto flex items-center justify-between pb-4 border-b border-white/[0.08] relative z-10">
+      {/* Header */}
+      <header className="w-full max-w-5xl mx-auto flex items-center justify-between pb-4 border-b border-white/[0.08] relative z-10">
         <Link to="/" className="flex items-center gap-2.5 group">
           <div className="w-8 h-8 rounded-lg bg-[#0B1020] border border-white/[0.12] flex items-center justify-center text-blue-400 group-hover:border-blue-500/50 transition-colors">
             <Compass className="w-4 h-4 text-blue-400" />
@@ -43,7 +43,7 @@ export const OnboardingPage: React.FC = () => {
           <span className="font-display font-bold text-lg text-white tracking-tight">Career Engine</span>
         </Link>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           {user && (
             <span className="text-xs font-mono text-slate-400">
               Signed in as <strong className="text-white font-medium">{user.fullName}</strong>
@@ -56,10 +56,10 @@ export const OnboardingPage: React.FC = () => {
       </header>
 
       {/* Main Content Workspace */}
-      <main className="w-full max-w-4xl mx-auto space-y-8 relative z-10 my-auto py-6">
+      <main className="w-full max-w-4xl mx-auto space-y-7 relative z-10 my-auto py-6">
         
         {/* Centered Heading */}
-        <div className="space-y-2.5 text-center max-w-2xl mx-auto">
+        <div className="space-y-2 text-center max-w-2xl mx-auto">
           <p className="text-[11px] font-mono uppercase tracking-widest text-blue-400 font-semibold">
             STAGE 1 • PERSONALIZATION SETUP
           </p>
@@ -96,10 +96,10 @@ export const OnboardingPage: React.FC = () => {
               </div>
 
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
+                <h2 className="text-2xl font-bold text-white mb-2">
                   Fresher
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed min-h-[40px]">
+                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed min-h-[38px]">
                   "I'm starting my career and want a clear path toward my first opportunity."
                 </p>
               </div>
@@ -112,7 +112,7 @@ export const OnboardingPage: React.FC = () => {
                   {["Student", "Recent Graduate", "Looking for First Job", "Self-Taught"].map((tag) => (
                     <span
                       key={tag}
-                      className="px-2.5 py-1 rounded-md bg-[#111827] text-slate-300 border border-white/[0.06] text-xs"
+                      className="px-2.5 py-1 rounded-md bg-[#111827] text-slate-300 border border-white/[0.06] text-xs font-medium"
                     >
                       {tag}
                     </span>
@@ -155,10 +155,10 @@ export const OnboardingPage: React.FC = () => {
               </div>
 
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
+                <h2 className="text-2xl font-bold text-white mb-2">
                   Professional
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed min-h-[40px]">
+                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed min-h-[38px]">
                   "I'm already working and want to grow, switch or advance my career."
                 </p>
               </div>
@@ -171,7 +171,7 @@ export const OnboardingPage: React.FC = () => {
                   {["Working Professional", "Promotion", "Company Switch", "Domain Switch"].map((tag) => (
                     <span
                       key={tag}
-                      className="px-2.5 py-1 rounded-md bg-[#111827] text-slate-300 border border-white/[0.06] text-xs"
+                      className="px-2.5 py-1 rounded-md bg-[#111827] text-slate-300 border border-white/[0.06] text-xs font-medium"
                     >
                       {tag}
                     </span>
