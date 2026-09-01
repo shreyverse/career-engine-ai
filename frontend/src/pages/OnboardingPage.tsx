@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { GraduationCap, Briefcase, Compass, ArrowRight, CheckCircle2 } from "lucide-react";
+import { GraduationCap, Briefcase, Compass, ArrowRight } from "lucide-react";
 import { Badge } from "../components/ui/Badge";
-import { Spinner } from "../components/ui/Spinner";
 import { Alert } from "../components/ui/Alert";
+import { Spinner } from "../components/ui/Spinner";
 import { useAuth } from "../hooks/useAuth";
 
 export const OnboardingPage: React.FC = () => {
@@ -30,7 +30,7 @@ export const OnboardingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-text py-6 px-6 sm:px-12 lg:px-16 relative subtle-radial-glow flex flex-col justify-between">
+    <div className="min-h-screen bg-background text-text py-6 px-6 sm:px-12 lg:px-16 relative subtle-radial-glow flex flex-col justify-between select-none">
       <div className="absolute inset-0 subtle-grid-bg opacity-30 pointer-events-none" />
 
       {/* Full-Width Top Header: Logo on Far Left, User Profile on Far Right */}
@@ -74,13 +74,14 @@ export const OnboardingPage: React.FC = () => {
 
         {/* Dual Cards Centered Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left pt-2 w-full">
-                    {/* Option 1 — Fresher */}
+          
+          {/* Option 1 — Fresher */}
           <div
             onClick={() => !isLoading && handleSelectStage("FRESHER")}
-            className={`p-6 sm:p-8 rounded-2xl border transition-all cursor-pointer relative group flex flex-col justify-between ${
+            className={`p-6 sm:p-8 rounded-2xl border transition-all cursor-pointer relative group flex flex-col justify-between select-none ${
               selectedStage === "FRESHER"
-                ? "bg-surface-elevated border-primary shadow-elevated-card ring-1 ring-primary/40"
-                : "bg-surface hover:bg-surface-elevated border-border hover:border-primary/50"
+                ? "bg-[#111A30] border-primary shadow-elevated-card ring-1 ring-primary/40"
+                : "bg-[#0B1020] hover:bg-[#0F172E] border-border/80 hover:border-primary/50"
             } ${isLoading && selectedStage === "FRESHER" ? "opacity-90" : ""}`}
           >
             <div>
@@ -106,7 +107,7 @@ export const OnboardingPage: React.FC = () => {
                   {["Student", "Recent Graduate", "Looking for First Job", "Self-Taught"].map((tag) => (
                     <span
                       key={tag}
-                      className="px-2.5 py-1 rounded-md bg-surface-highlight text-text-muted border border-border text-xs font-medium"
+                      className="px-2.5 py-1 rounded-md bg-[#162038] text-[#94A3B8] border border-white/[0.06] text-xs font-medium"
                     >
                       {tag}
                     </span>
@@ -115,7 +116,7 @@ export const OnboardingPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-8 pt-4 border-t border-border flex items-center justify-between text-xs font-semibold text-primary">
+            <div className="mt-8 pt-4 border-t border-border/60 flex items-center justify-between text-xs font-semibold text-primary">
               {isLoading && selectedStage === "FRESHER" ? (
                 <span className="flex items-center gap-2 text-primary-light">
                   <Spinner size="sm" /> Initializing Fresher Track...
@@ -132,10 +133,10 @@ export const OnboardingPage: React.FC = () => {
           {/* Option 2 — Professional */}
           <div
             onClick={() => !isLoading && handleSelectStage("PROFESSIONAL")}
-            className={`p-6 sm:p-8 rounded-2xl border transition-all cursor-pointer relative group flex flex-col justify-between ${
+            className={`p-6 sm:p-8 rounded-2xl border transition-all cursor-pointer relative group flex flex-col justify-between select-none ${
               selectedStage === "PROFESSIONAL"
-                ? "bg-surface-elevated border-secondary shadow-elevated-card ring-1 ring-secondary/40"
-                : "bg-surface hover:bg-surface-elevated border-border hover:border-secondary/50"
+                ? "bg-[#111A30] border-secondary shadow-elevated-card ring-1 ring-secondary/40"
+                : "bg-[#0B1020] hover:bg-[#0F172E] border-border/80 hover:border-secondary/50"
             } ${isLoading && selectedStage === "PROFESSIONAL" ? "opacity-90" : ""}`}
           >
             <div>
@@ -161,7 +162,7 @@ export const OnboardingPage: React.FC = () => {
                   {["Working Professional", "Promotion", "Company Switch", "Domain Switch"].map((tag) => (
                     <span
                       key={tag}
-                      className="px-2.5 py-1 rounded-md bg-surface-highlight text-text-muted border border-border text-xs font-medium"
+                      className="px-2.5 py-1 rounded-md bg-[#162038] text-[#94A3B8] border border-white/[0.06] text-xs font-medium"
                     >
                       {tag}
                     </span>
@@ -170,7 +171,7 @@ export const OnboardingPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-8 pt-4 border-t border-border flex items-center justify-between text-xs font-semibold text-secondary">
+            <div className="mt-8 pt-4 border-t border-border/60 flex items-center justify-between text-xs font-semibold text-secondary">
               {isLoading && selectedStage === "PROFESSIONAL" ? (
                 <span className="flex items-center gap-2 text-secondary-light">
                   <Spinner size="sm" /> Initializing Professional Track...
@@ -183,6 +184,7 @@ export const OnboardingPage: React.FC = () => {
               )}
             </div>
           </div>
+
         </div>
       </main>
 
