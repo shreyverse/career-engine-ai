@@ -142,8 +142,8 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
       <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-600/15 blur-[140px] pointer-events-none rounded-full" />
       <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] [background-size:28px_28px] opacity-40 pointer-events-none" />
 
-      {/* Top Navigation Bar */}
-      <header className="w-full max-w-7xl mx-auto flex items-center justify-between py-6 px-4 sm:px-8 border-b border-white/[0.06] relative z-20">
+      {/* Top Navigation Bar - Edge to Edge */}
+      <header className="w-full flex items-center justify-between py-5 px-6 sm:px-10 lg:px-12 border-b border-white/[0.06] relative z-20">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-[#0E1730] border border-white/[0.12] flex items-center justify-center text-blue-400 shadow-subtle-glow">
             <Compass className="w-5 h-5 text-blue-400" />
@@ -160,10 +160,10 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
         </button>
       </header>
 
-      {/* Main Analysis Container - Floating Glass Panel */}
-      <main className="w-full max-w-5xl mx-auto px-4 sm:px-8 py-8 relative z-10 flex-1 flex flex-col justify-center">
+      {/* Main Analysis Container - Edge to Edge Width */}
+      <main className="w-full px-4 sm:px-8 lg:px-12 py-6 relative z-10 flex-1 flex flex-col justify-center">
         {!analysisResult ? (
-          <div className="p-8 sm:p-10 lg:p-12 rounded-3xl bg-[#091124]/75 backdrop-blur-2xl border border-white/[0.08] shadow-[0_0_60px_rgba(59,130,246,0.12)] space-y-6 text-center w-full max-w-4xl mx-auto">
+          <div className="p-8 sm:p-10 lg:p-12 rounded-3xl bg-[#091124]/75 backdrop-blur-2xl border border-white/[0.08] shadow-[0_0_60px_rgba(59,130,246,0.12)] space-y-6 text-center w-full max-w-5xl mx-auto">
             <div className="space-y-2">
               <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-mono font-semibold uppercase tracking-wider">
                 <Sparkles className="w-3.5 h-3.5 text-blue-400" />
@@ -543,7 +543,7 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
       </main>
 
       {/* Footer */}
-      <footer className="w-full max-w-7xl mx-auto py-4 px-4 sm:px-8 text-center text-xs text-slate-500 font-mono relative z-20">
+      <footer className="w-full py-4 px-6 sm:px-10 lg:px-12 text-center text-xs text-slate-500 font-mono relative z-20">
         <p>© 2026 Career Engine AI. All rights reserved.</p>
       </footer>
     </div>
