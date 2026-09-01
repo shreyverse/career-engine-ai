@@ -94,6 +94,55 @@ export async function apiRequest<T = any>(
   return json.data as T;
 }
 
+export async function apiUploadRequest<T = any>(
+  endpoint: string,
+  formData: FormData
+): Promise<ApiResponse<T>> {
+  const token = localStorage.getItem("career_engine_token");
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE}${endpoint}`, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+  } catch (netErr: any) {
+    const err: any = new Error("Unable to connect to Career Engine backend. The server may be waking up, please try again in a few seconds.");
+    err.code = "NETWORK_ERROR";
+    throw err;
+  }
+
+  const rawText = await response.text();
+  let json: ApiResponse<T>;
+
+  try {
+    json = JSON.parse(rawText);
+  } catch {
+    if (response.status === 404) {
+      throw new Error(`Backend endpoint not found (${response.status}). Please check API URL configuration.`);
+    }
+    if (response.status >= 500) {
+      throw new Error("Backend service is initializing. Please wait a moment and try again.");
+    }
+    throw new Error(`Unexpected server response (${response.status})`);
+  }
+
+  if (!response.ok || json.success === false) {
+    const errorMsg = json.error?.message || (json as any).message || `Request failed with status ${response.status}`;
+    const err: any = new Error(errorMsg);
+    err.code = json.error?.code || "API_ERROR";
+    err.status = response.status;
+    throw err;
+  }
+
+  return json;
+}
+
 export const apiService = {
   async getHealth(): Promise<HealthStatus> {
     const res = await fetch(`${API_BASE}/health`, {
@@ -105,3 +154,4 @@ export const apiService = {
     return res.json();
   },
 };
+

@@ -1,5 +1,5 @@
 
-import { apiRequest } from './api';
+import { apiRequest, apiUploadRequest } from './api';
 import {
   StoredResumeRecord,
   ResumeData,
@@ -71,18 +71,8 @@ export const resumeApi = {
       formData.append('targetRole', targetRole);
     }
 
-    const API_BASE = import.meta.env.VITE_API_URL || '/api';
-    const response = await fetch(API_BASE + '/resume/public-analyze', {
-      method: 'POST',
-      body: formData,
-    });
-
-    const json = await response.json();
-    if (!response.ok || json.success === false) {
-      throw new Error(json.error?.message || json.message || 'Failed to analyze resume.');
-    }
-
-    return json.data;
+    const res = await apiUploadRequest<any>('/resume/public-analyze', formData);
+    return res.data;
   },
 
   uploadResumeFile: async (file: File, targetRole?: string): Promise<ResumeUploadResponse> => {
@@ -92,23 +82,8 @@ export const resumeApi = {
       formData.append('targetRole', targetRole);
     }
 
-    const token = localStorage.getItem('career_engine_token');
-    const API_BASE = import.meta.env.VITE_API_URL || '/api';
-
-    const response = await fetch(API_BASE + '/resume/upload', {
-      method: 'POST',
-      headers: {
-        ...(token ? { Authorization: 'Bearer ' + token } : {}),
-      },
-      body: formData,
-    });
-
-    const json = await response.json();
-    if (!response.ok || json.success === false) {
-      throw new Error(json.error?.message || json.message || 'Failed to upload and parse resume.');
-    }
-
-    return json.data as ResumeUploadResponse;
+    const res = await apiUploadRequest<ResumeUploadResponse>('/resume/upload', formData);
+    return res.data!;
   },
 
   improveContent: async (
