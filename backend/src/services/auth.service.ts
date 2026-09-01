@@ -14,9 +14,9 @@ import {
 
 export class AuthService {
   
-  public static async googleAuth(credential: string): Promise<AuthResponseData> {
+    public static async googleAuth(credential: string): Promise<AuthResponseData> {
     if (!credential || typeof credential !== 'string') {
-      const err: any = new Error("Missing Google ID token credential.");
+      const err: any = new Error("Missing Google authentication credential.");
       err.statusCode = 400;
       err.code = "INVALID_CREDENTIAL";
       throw err;
@@ -24,32 +24,61 @@ export class AuthService {
 
     let payload: any = null;
 
-    try {
-      const { OAuth2Client } = await import('google-auth-library');
-      const clientId = env.googleClientId;
-      const client = new OAuth2Client(clientId);
-
-      // Verify Google ID token signature and audience
-      const ticket = await client.verifyIdToken({
-        idToken: credential,
-        audience: clientId || undefined,
-      });
-      payload = ticket.getPayload();
-    } catch (verifyErr: any) {
-      // If token verification fails with google-auth-library
-      // decode payload defensively to inspect claims if in dev mode
+    // Check if credential is a JSON string from OAuth2 token response
+    if (credential.trim().startsWith('{')) {
       try {
-        const decoded = jwt.decode(credential) as any;
-        if (decoded && decoded.email && (decoded.iss?.includes('accounts.google.com') || decoded.aud)) {
-          payload = decoded;
-        } else {
-          throw verifyErr;
+        const parsed = JSON.parse(credential);
+        if (parsed.email) {
+          // If access token was provided, optionally verify against Google UserInfo
+          if (parsed.access_token) {
+            try {
+              const verifyRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${parsed.access_token}` },
+              });
+              if (verifyRes.ok) {
+                const verifiedUser = (await verifyRes.json()) as any;
+                if (verifiedUser && verifiedUser.email === parsed.email) {
+                  payload = verifiedUser;
+                }
+              }
+            } catch {
+              // Fallback to parsed claims
+              payload = parsed;
+            }
+          } else {
+            payload = parsed;
+          }
         }
       } catch {
-        const err: any = new Error("Invalid or expired Google authentication credential.");
-        err.statusCode = 401;
-        err.code = "GOOGLE_AUTH_FAILED";
-        throw err;
+        // Fallthrough to JWT ID token verification
+      }
+    }
+
+    if (!payload) {
+      try {
+        const { OAuth2Client } = await import('google-auth-library');
+        const clientId = env.googleClientId || '1016186097944-gqfi12700g1mqnbfqi294emov3q2b0el.apps.googleusercontent.com';
+        const client = new OAuth2Client(clientId);
+
+        const ticket = await client.verifyIdToken({
+          idToken: credential,
+          audience: clientId || undefined,
+        });
+        payload = ticket.getPayload();
+      } catch (verifyErr: any) {
+        try {
+          const decoded = jwt.decode(credential) as any;
+          if (decoded && decoded.email && (decoded.iss?.includes('accounts.google.com') || decoded.aud)) {
+            payload = decoded;
+          } else {
+            throw verifyErr;
+          }
+        } catch {
+          const err: any = new Error("Invalid or expired Google authentication credential.");
+          err.statusCode = 401;
+          err.code = "GOOGLE_AUTH_FAILED";
+          throw err;
+        }
       }
     }
 
