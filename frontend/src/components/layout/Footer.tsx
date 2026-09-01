@@ -53,8 +53,8 @@ export const Footer: React.FC = () => {
       links: [
         { label: "About", href: "/settings" },
         { label: "Contact", href: "/settings" },
-        { label: "Privacy Policy", href: "/settings" },
-        { label: "Terms of Service", href: "/settings" },
+        { label: "Privacy Policy", href: "/privacy" },
+        { label: "Terms of Service", href: "/terms" },
       ],
     },
   ];
