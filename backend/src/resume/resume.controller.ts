@@ -107,6 +107,26 @@ export class ResumeController {
     }
   }
 
+  public static async publicAnalyzeResume(req: any, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.file) {
+        res.status(400).json({ success: false, message: 'Please upload a valid PDF or DOCX resume document.' });
+        return;
+      }
+
+      const { targetRole } = req.body;
+      const result = await ResumeService.publicAnalyzeResume(req.file, targetRole);
+
+      res.status(200).json({
+        success: true,
+        data: result,
+        message: 'Resume analyzed successfully.',
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   public static async uploadResume(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = req.user?.userId;

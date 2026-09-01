@@ -5,6 +5,10 @@ import { resumeUpload } from './resume.storage';
 
 const router = Router();
 
+// Public unauthenticated resume analysis route
+router.post('/public-analyze', resumeUpload.single('resume'), ResumeController.publicAnalyzeResume);
+
+// Protected authenticated routes
 router.use(authMiddleware);
 
 router.post('/upload', resumeUpload.single('resume'), ResumeController.uploadResume);

@@ -51,6 +51,40 @@ export const resumeApi = {
     });
   },
 
+  publicAnalyzeResume: async (file: File, targetRole?: string): Promise<{
+    fileName: string;
+    parsedData: any;
+    atsScore: number;
+    categoryScores: {
+      atsCompatibility: number;
+      skillsMatch: number;
+      keywordOptimization: number;
+      experienceRelevance: number;
+      resumeStructure: number;
+    };
+    strengths: string[];
+    improvements: string[];
+  }> => {
+    const formData = new FormData();
+    formData.append('resume', file);
+    if (targetRole) {
+      formData.append('targetRole', targetRole);
+    }
+
+    const API_BASE = import.meta.env.VITE_API_URL || '/api';
+    const response = await fetch(API_BASE + '/resume/public-analyze', {
+      method: 'POST',
+      body: formData,
+    });
+
+    const json = await response.json();
+    if (!response.ok || json.success === false) {
+      throw new Error(json.error?.message || json.message || 'Failed to analyze resume.');
+    }
+
+    return json.data;
+  },
+
   uploadResumeFile: async (file: File, targetRole?: string): Promise<ResumeUploadResponse> => {
     const formData = new FormData();
     formData.append('resume', file);

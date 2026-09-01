@@ -3,6 +3,7 @@ import { TermsOfServicePage } from '../pages/TermsOfServicePage';
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { LandingPage } from '../pages/LandingPage';
+import { PublicResumeAnalyzerPage } from '../pages/PublicResumeAnalyzerPage';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
@@ -34,6 +35,7 @@ export const AppRoutes: React.FC = () => {
     <Routes>
       {/* Public Routes */}
       <Route path='/' element={<LandingPage />} />
+      <Route path='/analyze-resume' element={<PublicResumeAnalyzerPage />} />
       <Route path='/login' element={<LoginPage />} />
       <Route path='/register' element={<RegisterPage />} />
       <Route path='/forgot-password' element={<ForgotPasswordPage />} />

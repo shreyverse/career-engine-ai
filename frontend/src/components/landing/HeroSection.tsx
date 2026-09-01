@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Sparkles, Compass, Target, Layers, CheckCircle2, ChevronRight } from "lucide-react";
+import { ArrowRight, Sparkles, Compass, Target, Layers, CheckCircle2, ChevronRight, FileText } from "lucide-react";
 
 export const HeroSection: React.FC = () => {
   return (
