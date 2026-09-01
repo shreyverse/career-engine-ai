@@ -10,6 +10,12 @@ import {
   Sparkles,
   RefreshCw,
   Compass,
+  Check,
+  PlusCircle,
+  TrendingUp,
+  AlertTriangle,
+  Target,
+  Layers,
 } from 'lucide-react';
 import { resumeApi } from '../../services/resumeApi';
 import { GoogleAuthButton } from '../auth/GoogleAuthButton';
@@ -97,7 +103,7 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
           JSON.stringify({
             fileName: result.fileName,
             parsedData: result.parsedData,
-            atsScore: result.atsScore,
+            atsScore: result.overallScore || result.atsScore,
             targetRole: targetRole || 'Software Engineer',
             timestamp: Date.now(),
           })
@@ -113,16 +119,20 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10';
-    if (score >= 60) return 'text-blue-400 border-blue-500/40 bg-blue-500/10';
-    return 'text-amber-400 border-amber-500/40 bg-amber-500/10';
+    if (score >= 85) return 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10';
+    if (score >= 70) return 'text-blue-400 border-blue-500/40 bg-blue-500/10';
+    if (score >= 50) return 'text-amber-400 border-amber-500/40 bg-amber-500/10';
+    return 'text-rose-400 border-rose-500/40 bg-rose-500/10';
   };
 
   const getScoreBadge = (score: number) => {
-    if (score >= 85) return 'Strong Candidate (Top 10%)';
-    if (score >= 70) return 'Job Competitive (Top 25%)';
-    return 'Needs Optimization';
+    if (score >= 88) return 'Top Tier (Top 5% Candidate)';
+    if (score >= 75) return 'Competitive (Top 20% Candidate)';
+    if (score >= 60) return 'Moderate (Needs Optimization)';
+    return 'Critical Optimization Needed';
   };
+
+  const currentScore = analysisResult ? (analysisResult.overallScore || analysisResult.atsScore) : 0;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-gradient-to-b from-[#070D1E] via-[#0A1329] to-[#060B18] text-white flex flex-col justify-between select-none animate-fadeIn">
@@ -151,19 +161,19 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
       </header>
 
       {/* Main Analysis Container - Floating Glass Panel */}
-      <main className="w-full max-w-4xl mx-auto px-4 sm:px-8 py-8 relative z-10 flex-1 flex flex-col justify-center">
+      <main className="w-full max-w-5xl mx-auto px-4 sm:px-8 py-8 relative z-10 flex-1 flex flex-col justify-center">
         {!analysisResult ? (
-          <div className="p-8 sm:p-10 lg:p-12 rounded-3xl bg-[#091124]/75 backdrop-blur-2xl border border-white/[0.08] shadow-[0_0_60px_rgba(59,130,246,0.12)] space-y-6 text-center w-full">
+          <div className="p-8 sm:p-10 lg:p-12 rounded-3xl bg-[#091124]/75 backdrop-blur-2xl border border-white/[0.08] shadow-[0_0_60px_rgba(59,130,246,0.12)] space-y-6 text-center w-full max-w-4xl mx-auto">
             <div className="space-y-2">
               <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-mono font-semibold uppercase tracking-wider">
                 <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                <span>Instant ATS Resume Scanner</span>
+                <span>Multi-Stage AI Agent Scanner</span>
               </div>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold text-white tracking-tight">
                 Analyze Your Resume
               </h2>
               <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-xl mx-auto">
-                Upload your resume and discover how ready you are for your next opportunity.
+                Get an objective, multi-pillar ATS score and tailored role benchmark in seconds.
               </p>
             </div>
 
@@ -174,21 +184,22 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
               </div>
             )}
 
-            {/* Target Role input */}
+            {/* Target Role Selector */}
             <div className="text-left space-y-1.5 max-w-md mx-auto">
-              <label className="text-xs font-mono text-slate-400 font-medium">
-                Target Role Benchmark:
+              <label className="text-xs font-mono text-slate-400 font-medium flex items-center gap-1.5">
+                <Target className="w-3.5 h-3.5 text-blue-400" />
+                <span>Target Role Benchmark:</span>
               </label>
               <input
                 type="text"
                 value={targetRole}
                 onChange={(e) => setTargetRole(e.target.value)}
-                placeholder="e.g. Software Engineer, AI Engineer"
+                placeholder="e.g. AI Engineer, Software Engineer, Frontend Developer"
                 className="w-full h-11 px-4 rounded-xl bg-[#060B18] border border-white/[0.1] focus:border-blue-500 focus:outline-none text-white text-sm placeholder-slate-500"
               />
             </div>
 
-            {/* Drag & Drop Box (Darker inner glass) */}
+            {/* Drag & Drop Box */}
             <div
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
@@ -247,7 +258,7 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
                 {isAnalyzing ? (
                   <>
                     <Spinner size="sm" />
-                    <span>Analyzing Resume with AI...</span>
+                    <span>Running 6-Agent ATS Pipeline...</span>
                   </>
                 ) : (
                   <>
@@ -257,20 +268,21 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
                 )}
               </button>
               <p className="text-xs text-slate-400 font-mono mt-2.5">
-                Get your ATS score instantly — no login required.
+                Get your deterministic ATS score instantly — no login required.
               </p>
             </div>
           </div>
         ) : (
-          <div className="p-8 sm:p-10 lg:p-12 rounded-3xl bg-[#091124]/75 backdrop-blur-2xl border border-white/[0.08] shadow-[0_0_60px_rgba(59,130,246,0.12)] space-y-8 w-full animate-fadeIn">
-            <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
+          <div className="p-6 sm:p-10 rounded-3xl bg-[#091124]/80 backdrop-blur-2xl border border-white/[0.08] shadow-[0_0_60px_rgba(59,130,246,0.12)] space-y-8 w-full animate-fadeIn">
+            {/* Header / Rescan */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-white/[0.08] pb-5 gap-4">
               <div>
                 <div className="flex items-center gap-1.5 text-xs font-mono text-blue-400 uppercase tracking-wider mb-1">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>Analysis Complete • {analysisResult.fileName}</span>
+                  <span>Deterministic ATS Evaluation • {analysisResult.fileName}</span>
                 </div>
-                <h2 className="text-xl sm:text-2xl font-display font-extrabold text-white">
-                  Your ATS Score Evaluation
+                <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-white">
+                  ATS Score: {targetRole} Benchmark
                 </h2>
               </div>
 
@@ -280,70 +292,208 @@ export const ResumeAnalysisModal: React.FC<ResumeAnalysisModalProps> = ({
                   setAnalysisResult(null);
                   setFile(null);
                 }}
-                className="px-3.5 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] text-xs font-mono text-slate-300 flex items-center gap-1.5 border border-white/[0.1] transition-all cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-mono text-slate-300 flex items-center gap-1.5 border border-white/[0.1] transition-all cursor-pointer"
               >
-                <RefreshCw className="w-3 h-3" />
-                <span>Rescan</span>
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Upload Another Resume</span>
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
-              <div className="md:col-span-5 p-6 rounded-2xl bg-[#060B18]/90 border border-blue-500/30 flex flex-col items-center justify-center text-center space-y-4">
-                <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">
-                  YOUR ATS SCORE
+            {/* Score & Pillar Breakdown Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+              {/* Overall Score Circle */}
+              <div className="lg:col-span-4 p-6 rounded-2xl bg-[#060B18]/90 border border-blue-500/30 flex flex-col items-center justify-center text-center space-y-4">
+                <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold flex items-center gap-1">
+                  <TrendingUp className="w-3.5 h-3.5 text-blue-400" />
+                  <span>OVERALL ATS SCORE</span>
                 </span>
                 
-                <div className="w-32 h-32 rounded-full border-4 border-blue-500/25 flex flex-col items-center justify-center bg-[#091124] shadow-[0_0_40px_rgba(59,130,246,0.2)]">
-                  <span className="text-4xl sm:text-5xl font-display font-black text-white">
-                    {analysisResult.atsScore}
+                <div className="w-36 h-36 rounded-full border-4 border-blue-500/25 flex flex-col items-center justify-center bg-[#091124] shadow-[0_0_40px_rgba(59,130,246,0.25)]">
+                  <span className="text-5xl font-display font-black text-white">
+                    {currentScore}
                   </span>
-                  <span className="text-[11px] font-mono text-slate-400 font-semibold">
+                  <span className="text-xs font-mono text-slate-400 font-semibold">
                     / 100
                   </span>
                 </div>
 
-                <span className={`px-3 py-0.5 rounded-full text-xs font-mono font-bold border ${getScoreColor(analysisResult.atsScore)}`}>
-                  {getScoreBadge(analysisResult.atsScore)}
+                <span className={`px-3.5 py-1 rounded-full text-xs font-mono font-bold border ${getScoreColor(currentScore)}`}>
+                  {getScoreBadge(currentScore)}
                 </span>
               </div>
 
-              <div className="md:col-span-7 p-6 rounded-2xl bg-[#060B18]/90 border border-white/[0.08] space-y-3.5">
-                <span className="text-xs font-bold text-white uppercase tracking-wider">
-                  Category Breakdown
-                </span>
+              {/* 5-Pillar Score Breakdown */}
+              <div className="lg:col-span-8 p-6 rounded-2xl bg-[#060B18]/90 border border-white/[0.08] space-y-4">
+                <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
+                  <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5 text-blue-400" />
+                    <span>5-Pillar Mathematical Breakdown</span>
+                  </span>
+                  <span className="text-[11px] font-mono text-slate-400">Target Role: {targetRole}</span>
+                </div>
 
-                <div className="space-y-2.5">
+                <div className="space-y-3">
                   {[
-                    { label: 'ATS Compatibility', val: analysisResult.categoryScores.atsCompatibility },
-                    { label: 'Skills Match', val: analysisResult.categoryScores.skillsMatch },
-                    { label: 'Keyword Optimization', val: analysisResult.categoryScores.keywordOptimization },
-                    { label: 'Resume Structure', val: analysisResult.categoryScores.resumeStructure },
-                    { label: 'Experience Relevance', val: analysisResult.categoryScores.experienceRelevance },
-                  ].map((cat) => (
-                    <div key={cat.label} className="space-y-1">
+                    {
+                      label: 'ATS Compatibility & Structure',
+                      val: analysisResult.breakdown?.atsCompatibility || 80,
+                      reason: analysisResult.breakdownExplanations?.atsCompatibility,
+                    },
+                    {
+                      label: 'Role Keyword & Skill Match',
+                      val: analysisResult.breakdown?.keywordMatch || 75,
+                      reason: analysisResult.breakdownExplanations?.keywordMatch,
+                    },
+                    {
+                      label: 'Experience Relevance',
+                      val: analysisResult.breakdown?.experienceRelevance || 80,
+                      reason: analysisResult.breakdownExplanations?.experienceRelevance,
+                    },
+                    {
+                      label: 'Project Relevance & Artifacts',
+                      val: analysisResult.breakdown?.projectRelevance || 75,
+                      reason: analysisResult.breakdownExplanations?.projectRelevance,
+                    },
+                    {
+                      label: 'Quantifiable Metric Quality',
+                      val: analysisResult.breakdown?.achievementQuality || 70,
+                      reason: analysisResult.breakdownExplanations?.achievementQuality,
+                    },
+                  ].map((pillar) => (
+                    <div key={pillar.label} className="space-y-1 bg-white/[0.02] p-2.5 rounded-xl border border-white/[0.04]">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-300 font-medium">{cat.label}</span>
-                        <span className="font-mono font-bold text-blue-300">{cat.val}%</span>
+                        <span className="text-slate-200 font-semibold">{pillar.label}</span>
+                        <span className="font-mono font-bold text-blue-300">{pillar.val}%</span>
                       </div>
                       <div className="w-full h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
-                          style={{ width: `${cat.val}%` }}
+                          className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-700"
+                          style={{ width: `${pillar.val}%` }}
                         />
                       </div>
+                      {pillar.reason && (
+                        <p className="text-[11px] text-slate-400 leading-tight pt-0.5">
+                          {pillar.reason}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
               </div>
             </div>
 
+            {/* Matched vs Missing Skills Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Matched Skills */}
+              <div className="p-6 rounded-2xl bg-[#060B18]/90 border border-emerald-500/20 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Check className="w-4 h-4 text-emerald-400" />
+                    <span>Matched Skills ({analysisResult.matchedSkills?.length || 0})</span>
+                  </h3>
+                  <span className="text-[11px] font-mono text-emerald-400">Verified in Resume</span>
+                </div>
+                
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {analysisResult.matchedSkills && analysisResult.matchedSkills.length > 0 ? (
+                    analysisResult.matchedSkills.map((skill: string) => (
+                      <span
+                        key={skill}
+                        className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono font-medium flex items-center gap-1"
+                      >
+                        <Check className="w-3 h-3 text-emerald-400" />
+                        <span>{skill}</span>
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-slate-400 italic">
+                      No exact keyword matches found for {targetRole} benchmark.
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Missing Skills / Priority Skill Gaps */}
+              <div className="p-6 rounded-2xl bg-[#060B18]/90 border border-amber-500/20 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <PlusCircle className="w-4 h-4 text-amber-400" />
+                    <span>Recommended Keywords ({analysisResult.missingKeywords?.length || 0})</span>
+                  </h3>
+                  <span className="text-[11px] font-mono text-amber-400">High-Demand Gaps</span>
+                </div>
+                
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {analysisResult.missingKeywords && analysisResult.missingKeywords.length > 0 ? (
+                    analysisResult.missingKeywords.slice(0, 8).map((skill: string) => (
+                      <span
+                        key={skill}
+                        className="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-mono font-medium flex items-center gap-1"
+                      >
+                        <PlusCircle className="w-3 h-3 text-amber-400" />
+                        <span>{skill}</span>
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-emerald-400 font-mono">
+                      All benchmark core skills present!
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Strengths & Weaknesses */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Strengths */}
+              <div className="p-6 rounded-2xl bg-[#060B18]/90 border border-white/[0.08] space-y-3">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-blue-400" />
+                  <span>Resume Strengths</span>
+                </h3>
+                <ul className="space-y-2 text-xs text-slate-300">
+                  {analysisResult.strengths && analysisResult.strengths.length > 0 ? (
+                    analysisResult.strengths.map((str: string, idx: number) => (
+                      <li key={idx} className="flex items-start gap-2">
+                        <span className="text-blue-400 font-bold">•</span>
+                        <span>{str}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-slate-400">Clean standard format compatibility.</li>
+                  )}
+                </ul>
+              </div>
+
+              {/* Priority Improvements */}
+              <div className="p-6 rounded-2xl bg-[#060B18]/90 border border-white/[0.08] space-y-3">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-400" />
+                  <span>Priority Improvements</span>
+                </h3>
+                <ul className="space-y-2 text-xs text-slate-300">
+                  {analysisResult.weaknesses && analysisResult.weaknesses.length > 0 ? (
+                    analysisResult.weaknesses.map((imp: string, idx: number) => (
+                      <li key={idx} className="flex items-start gap-2">
+                        <span className="text-amber-400 font-bold">•</span>
+                        <span>{imp}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-slate-400">Tailor keywords specifically for each target job application.</li>
+                  )}
+                </ul>
+              </div>
+            </div>
+
+            {/* Conversion to Full Career Engine Plan */}
             <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-b from-[#0E1A38] to-[#091124] border border-blue-500/40 text-center space-y-5">
               <div className="space-y-1.5">
                 <h3 className="text-lg sm:text-2xl font-display font-bold text-white">
-                  Your resume is only the beginning.
+                  Your ATS score is just the starting point.
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-300 max-w-lg mx-auto">
-                  Unlock your complete Career Engine analysis and get your personalized roadmap.
+                  Unlock your full Career Engine profile to bridge your skill gaps and generate a step-by-step career roadmap.
                 </p>
               </div>
 

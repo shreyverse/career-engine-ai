@@ -54,7 +54,24 @@ export const resumeApi = {
   publicAnalyzeResume: async (file: File, targetRole?: string): Promise<{
     fileName: string;
     parsedData: any;
+    overallScore: number;
     atsScore: number;
+    breakdown: {
+      atsCompatibility: number;
+      keywordMatch: number;
+      experienceRelevance: number;
+      projectRelevance: number;
+      achievementQuality: number;
+      formatting: number;
+      sectionCompleteness: number;
+    };
+    breakdownExplanations: {
+      atsCompatibility: string;
+      keywordMatch: string;
+      experienceRelevance: string;
+      projectRelevance: string;
+      achievementQuality: string;
+    };
     categoryScores: {
       atsCompatibility: number;
       skillsMatch: number;
@@ -63,7 +80,11 @@ export const resumeApi = {
       resumeStructure: number;
     };
     strengths: string[];
+    weaknesses: string[];
+    matchedSkills: string[];
+    missingKeywords: string[];
     improvements: string[];
+    recommendations: string[];
   }> => {
     const formData = new FormData();
     formData.append('resume', file);
