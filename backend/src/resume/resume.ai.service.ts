@@ -29,7 +29,7 @@ export class ResumeAIService {
           '--- RESUME TEXT END ---\n\n' +
           'Target Role Context: ' + (targetRoleHint || 'Software Engineer');
 
-        const response = await client.models.generateContent({
+        const generatePromise = client.models.generateContent({
           model: env.geminiModel || 'gemini-2.5-flash',
           contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
           config: {
@@ -38,6 +38,12 @@ export class ResumeAIService {
             responseMimeType: 'application/json',
           },
         });
+
+        const timeoutPromise = new Promise<any>((_, reject) =>
+          setTimeout(() => reject(new Error('Gemini API timeout')), 3500)
+        );
+
+        const response: any = await Promise.race([generatePromise, timeoutPromise]);
 
         const rawJson = response.text?.trim() || '{}';
         const parsed = JSON.parse(rawJson);
