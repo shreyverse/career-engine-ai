@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Sparkles, Compass, Target, Layers, CheckCircle2, ChevronRight, FileText } from "lucide-react";
+import { ResumeAnalysisModal } from "../resume/ResumeAnalysisModal";
 
 export const HeroSection: React.FC = () => {
+  const [isResumeModalOpen, setIsResumeModalOpen] = useState(false);
+
   return (
     <section className="w-full min-h-[96vh] flex flex-col justify-center items-center pt-28 pb-20 px-4 sm:px-8 lg:px-16 relative overflow-hidden bg-[#050608]">
       
@@ -150,44 +153,37 @@ export const HeroSection: React.FC = () => {
           Analyze your skills, identify your gaps, and build a personalized roadmap to reach your career goals.
         </p>
 
-        {/* Action CTA Buttons */}
+        {/* Action CTA Buttons: Row 1 */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-3 w-full sm:w-auto">
           <Link
             to="/onboarding"
-            className="w-full sm:w-auto px-8 py-4 rounded-full text-base font-bold text-white bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-[0_0_28px_rgba(59,130,246,0.45)] hover:shadow-[0_0_42px_rgba(59,130,246,0.7)] transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2.5 group"
+            className="w-full sm:w-auto px-9 py-4.5 rounded-full text-base font-bold text-white bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-[0_0_28px_rgba(59,130,246,0.45)] hover:shadow-[0_0_42px_rgba(59,130,246,0.7)] transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2.5 group"
           >
             <span>Start Your Career Analysis</span>
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Link>
 
-          <Link
-            to="/analyze-resume"
-            className="w-full sm:w-auto px-7 py-4 rounded-full text-base font-semibold text-white bg-white/[0.06] border border-blue-500/40 hover:bg-blue-500/10 hover:border-blue-500/70 shadow-[0_0_20px_rgba(59,130,246,0.25)] transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2.5 group"
-          >
-            <FileText className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform" />
-            <span>Analyze Your Resume</span>
-            <ArrowRight className="w-4 h-4 text-blue-400 group-hover:translate-x-0.5 transition-transform" />
-          </Link>
-
           <a
             href="#how-it-works"
-            className="w-full sm:w-auto px-6 py-4 rounded-full text-sm font-semibold text-[#8D96AA] hover:text-white bg-transparent hover:bg-white/[0.04] transition-all flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-8 py-4.5 rounded-full text-base font-semibold text-[#F5F7FF] bg-white/[0.04] border border-white/[0.12] hover:bg-white/[0.08] hover:border-white/[0.25] transition-all flex items-center justify-center gap-2.5"
           >
-            <Compass className="w-4 h-4 text-blue-400" />
-            <span>How It Works</span>
+            <Compass className="w-5 h-5 text-blue-400" />
+            <span>Explore How It Works</span>
           </a>
         </div>
 
-        {/* Highlight Banner & Supporting Line */}
-        <div className="pt-2 flex flex-col items-center max-w-xl mx-auto space-y-2">
-          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-xl bg-[#090E1E] border border-blue-500/30 text-left">
-            <span className="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 font-mono text-[10px] font-bold tracking-wider uppercase border border-blue-500/30 shrink-0">
-              RESUME → CAREER
-            </span>
-            <span className="text-xs text-slate-300 font-medium">
-              Upload your resume. Get your ATS score. Discover exactly what it takes to reach your dream job.
-            </span>
-          </div>
+        {/* Third Prominent Option directly below */}
+        <div className="pt-2 flex flex-col items-center space-y-2">
+          <button
+            type="button"
+            onClick={() => setIsResumeModalOpen(true)}
+            className="px-8 py-3.5 rounded-2xl bg-[#090E1E] border border-blue-500/40 hover:border-blue-500/80 hover:bg-[#0E1730] shadow-[0_0_25px_rgba(59,130,246,0.22)] hover:shadow-[0_0_35px_rgba(59,130,246,0.4)] transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-3 group cursor-pointer"
+          >
+            <FileText className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform" />
+            <span className="text-base font-bold text-white">Analyze Your Resume</span>
+            <ArrowRight className="w-4 h-4 text-blue-400 group-hover:translate-x-1 transition-transform" />
+          </button>
+          
           <p className="text-xs font-mono text-slate-400">
             Get your ATS score instantly — no login required.
           </p>
@@ -253,6 +249,12 @@ export const HeroSection: React.FC = () => {
         </div>
 
       </div>
+
+      {/* Resume Analysis Interactive Modal */}
+      <ResumeAnalysisModal
+        isOpen={isResumeModalOpen}
+        onClose={() => setIsResumeModalOpen(false)}
+      />
     </section>
   );
 };
