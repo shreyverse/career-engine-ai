@@ -1,3 +1,4 @@
+import { HealthController } from '../controllers/health.controller';
 import { Router } from 'express';
 import authRouter from './auth.routes';
 import onboardingRouter from './onboarding.routes';
@@ -17,6 +18,8 @@ import {
 } from './assessment.routes';
 
 const router = Router();
+
+router.get("/health", HealthController.getHealth);
 
 router.use('/auth', authRouter);
 router.use('/onboarding', onboardingRouter);
