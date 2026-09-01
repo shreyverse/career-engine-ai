@@ -11,6 +11,7 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (credentials: { email: string; password: string }) => Promise<void>;
+  loginWithGoogle: (credential: string) => Promise<{ user: User; hasCompletedOnboarding: boolean }>;
   register: (data: { email: string; password: string; fullName: string; careerStage?: string }) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
@@ -58,6 +59,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     refreshUser();
   }, [refreshUser]);
+
+    const loginWithGoogle = async (credential: string) => {
+    setIsLoading(true);
+    try {
+      const res = await authService.googleLogin(credential);
+      localStorage.setItem(TOKEN_STORAGE_KEY, res.token);
+      setToken(res.token);
+      setUser(res.user);
+      await refreshUser();
+      return {
+        user: res.user,
+        hasCompletedOnboarding: res.user.hasCompletedOnboarding || res.user.isOnboarded || false,
+      };
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const login = async (credentials: { email: string; password: string }) => {
     setIsLoading(true);
@@ -113,6 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated: Boolean(user && token),
     isLoading,
     login,
+    loginWithGoogle,
     register,
     logout,
     refreshUser,

@@ -5,6 +5,7 @@ import { authMiddleware } from "../middleware/auth.middleware";
 const router = Router();
 
 // Public Auth Endpoints
+router.post("/google", AuthController.googleAuth);
 router.post("/register", AuthController.register);
 router.post("/login", AuthController.login);
 router.post("/logout", AuthController.logout);

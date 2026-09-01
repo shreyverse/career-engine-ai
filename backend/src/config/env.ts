@@ -13,6 +13,8 @@ export interface EnvironmentConfig {
   jwtExpiresIn: string;
   geminiApiKey?: string;
   geminiModel: string;
+  googleClientId?: string;
+  googleClientSecret?: string;
   isProduction: boolean;
   isDevelopment: boolean;
 }
@@ -25,6 +27,8 @@ export const env: EnvironmentConfig = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
   geminiApiKey: process.env.GEMINI_API_KEY || undefined,
   geminiModel: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+  googleClientId: process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || undefined,
+  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || undefined,
   isProduction: (process.env.NODE_ENV || "development") === "production",
   isDevelopment: (process.env.NODE_ENV || "development") === "development",
 };

@@ -4,6 +4,20 @@ import { sendSuccess, sendError } from "../utils/response";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
 
 export class AuthController {
+    public static async googleAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { credential } = req.body;
+      if (!credential) {
+        sendError(res, "Google credential token is required.", 400, "VALIDATION_ERROR");
+        return;
+      }
+      const result = await AuthService.googleAuth(credential);
+      sendSuccess(res, result, 200, { message: "Authenticated successfully with Google" });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   public static async register(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email, password, fullName, careerStage } = req.body;

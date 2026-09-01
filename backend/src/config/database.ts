@@ -31,6 +31,7 @@ export interface StoredUser {
   fullName: string;
   avatarUrl?: string | null;
   role: UserRole;
+  authProvider?: "local" | "google";
   careerStage: CareerStage;
   careerType?: CareerStage | null;
   isOnboarded: boolean;
@@ -447,6 +448,7 @@ export class InMemoryDataStore {
     fullName: string;
     avatarUrl?: string | null;
     role?: UserRole;
+    authProvider?: "local" | "google";
     careerStage?: CareerStage;
     careerType?: CareerStage | null;
     isOnboarded?: boolean;
@@ -462,6 +464,7 @@ export class InMemoryDataStore {
       fullName: userData.fullName.trim(),
       avatarUrl: userData.avatarUrl || null,
       role: userData.role || 'USER',
+      authProvider: userData.authProvider || 'local',
       careerStage: userData.careerStage || 'FRESHER',
       careerType: userData.careerType || userData.careerStage || null,
       isOnboarded: userData.isOnboarded || false,

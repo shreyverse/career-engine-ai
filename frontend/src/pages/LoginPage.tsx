@@ -1,3 +1,4 @@
+import { GoogleAuthButton } from '../components/auth/GoogleAuthButton';
 import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Mail, Compass, ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
@@ -115,6 +116,22 @@ export const LoginPage: React.FC = () => {
             Sign In to Career Engine
           </Button>
         </form>
+
+        {/* Google Authentication Button */}
+        <div className="space-y-4">
+          <div className="relative flex items-center justify-center">
+            <div className="border-t border-white/[0.08] w-full" />
+            <span className="bg-[#0B1020] px-3 text-[11px] font-mono text-[#8D96AA] uppercase tracking-wider relative z-10">
+              OR
+            </span>
+          </div>
+
+          <GoogleAuthButton
+            mode="signin"
+            onError={(errMsg) => setError(errMsg)}
+          />
+        </div>
+
 
         <div className="pt-3 border-t border-border flex items-center justify-between">
           <Button

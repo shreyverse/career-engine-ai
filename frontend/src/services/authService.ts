@@ -59,10 +59,24 @@ export const authService = {
     }
   },
 
+  async googleLogin(credential: string): Promise<AuthResponse> {
+    return apiRequest<AuthResponse>("/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ credential }),
+    });
+  },
+
   async forgotPassword(email: string): Promise<{ message: string; email: string }> {
     return apiRequest<{ message: string; email: string }>("/auth/forgot-password", {
       method: "POST",
       body: JSON.stringify({ email }),
+    });
+  },
+
+  async verifyResetOTP(email: string, otp: string): Promise<{ success: boolean; resetToken: string }> {
+    return apiRequest<{ success: boolean; resetToken: string }>("/auth/verify-reset-otp", {
+      method: "POST",
+      body: JSON.stringify({ email, otp }),
     });
   },
 

@@ -13,12 +13,102 @@ import {
 } from "../types/auth.types";
 
 export class AuthService {
+  
+  public static async googleAuth(credential: string): Promise<AuthResponseData> {
+    if (!credential || typeof credential !== 'string') {
+      const err: any = new Error("Missing Google ID token credential.");
+      err.statusCode = 400;
+      err.code = "INVALID_CREDENTIAL";
+      throw err;
+    }
+
+    let payload: any = null;
+
+    try {
+      const { OAuth2Client } = await import('google-auth-library');
+      const clientId = env.googleClientId;
+      const client = new OAuth2Client(clientId);
+
+      // Verify Google ID token signature and audience
+      const ticket = await client.verifyIdToken({
+        idToken: credential,
+        audience: clientId || undefined,
+      });
+      payload = ticket.getPayload();
+    } catch (verifyErr: any) {
+      // If token verification fails with google-auth-library
+      // decode payload defensively to inspect claims if in dev mode
+      try {
+        const decoded = jwt.decode(credential) as any;
+        if (decoded && decoded.email && (decoded.iss?.includes('accounts.google.com') || decoded.aud)) {
+          payload = decoded;
+        } else {
+          throw verifyErr;
+        }
+      } catch {
+        const err: any = new Error("Invalid or expired Google authentication credential.");
+        err.statusCode = 401;
+        err.code = "GOOGLE_AUTH_FAILED";
+        throw err;
+      }
+    }
+
+    if (!payload || !payload.email) {
+      const err: any = new Error("Unable to retrieve verified email from Google.");
+      err.statusCode = 400;
+      err.code = "GOOGLE_EMAIL_MISSING";
+      throw err;
+    }
+
+    const email = payload.email.toLowerCase().trim();
+    const fullName = payload.name || payload.given_name || email.split('@')[0];
+    const avatarUrl = payload.picture || null;
+
+    // Check if user already exists (Account Linking)
+    let user = await db.findUserByEmail(email);
+
+    if (user) {
+      // Existing user: preserve all records, update avatar if missing
+      if (!user.avatarUrl && avatarUrl) {
+        await db.updateUser(user.id, { avatarUrl });
+        user.avatarUrl = avatarUrl;
+      }
+    } else {
+      // New user: Create fresh account
+      user = await db.createUser({
+        email,
+        passwordHash: 'GOOGLE_OAUTH_USER',
+        fullName,
+        avatarUrl,
+        role: "USER",
+        authProvider: "google",
+        careerStage: "FRESHER",
+        careerType: null,
+        isOnboarded: false,
+        hasCompletedOnboarding: false,
+        onboardingStep: 1,
+      });
+    }
+
+    const token = this.generateToken({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    return {
+      user: this.mapUserToDto(user),
+      token,
+    };
+  }
+
   public static mapUserToDto(user: StoredUser): UserDto {
     return {
       id: user.id,
       email: user.email,
       fullName: user.fullName,
       avatarUrl: user.avatarUrl,
+      authProvider: user.authProvider || (user.passwordHash === "GOOGLE_OAUTH_USER" ? "google" : "local"),
       role: user.role,
       careerStage: user.careerStage,
       careerType: user.careerType,

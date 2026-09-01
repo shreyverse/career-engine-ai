@@ -9,6 +9,7 @@ export interface UserDto {
   fullName: string;
   avatarUrl?: string | null;
   role: UserRole;
+  authProvider?: "local" | "google";
   careerStage: CareerStage;
   careerType?: CareerStage | null;
   isOnboarded: boolean;
@@ -162,4 +163,8 @@ export interface ProfessionalAssessmentData {
   };
   currentStep: number;
   completedAt?: string | null;
+}
+
+export interface GoogleAuthDto {
+  credential: string;
 }
