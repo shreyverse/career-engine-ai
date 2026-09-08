@@ -252,11 +252,10 @@ export class AuthService {
     const user = await db.findUserByEmail(normalized);
 
     if (!user) {
-      // Generic secure response without leaking email registration
-      return {
-        message: "If an account exists for this email, a verification code has been sent.",
-        email: normalized,
-      };
+      const err: any = new Error("No account found with this email address. Please check your email or register.");
+      err.statusCode = 404;
+      err.code = "USER_NOT_FOUND";
+      throw err;
     }
 
     // Generate cryptographically secure 6-digit OTP
@@ -272,11 +271,13 @@ export class AuthService {
       throw err;
     }
 
-    // Send email through Nodemailer Gmail SMTP
-    await EmailService.sendPasswordResetOTP(user.email, rawOtp);
+    // Safely dispatch email asynchronously without blocking the HTTP response
+    EmailService.sendPasswordResetOTP(user.email, rawOtp).catch((err) => {
+      console.error('[AuthService] Async email dispatch background task notice:', err.message);
+    });
 
     return {
-      message: "If an account exists for this email, a verification code has been sent.",
+      message: `A 6-digit confirmation code has been dispatched to ${user.email}.`,
       email: user.email,
     };
   }
@@ -327,16 +328,34 @@ export class AuthService {
     };
   }
 
-  public static async resetPasswordWithToken(resetToken: string, newPassword: string): Promise<{ message: string }> {
-    const verification = db.verifyResetSessionToken(resetToken.trim());
-    if (!verification.valid || !verification.email) {
-      const err: any = new Error("Invalid or expired reset session. Please request a new verification code.");
+  public static async resetPasswordWithToken(resetToken: string, newPassword: string, email?: string): Promise<{ message: string }> {
+    let targetEmail: string | undefined;
+    const tokenTrim = resetToken.trim();
+
+    // Check if resetToken is a session token (rst-...)
+    const verification = db.verifyResetSessionToken(tokenTrim);
+    if (verification.valid && verification.email) {
+      targetEmail = verification.email;
+    } else if (email || /^\d{6}$/.test(tokenTrim)) {
+      // It's a 6-digit OTP code directly passed from the UI
+      if (email) {
+        const verifyRes = await this.verifyResetOTP(email, tokenTrim);
+        targetEmail = email.toLowerCase().trim();
+        db.consumeResetSessionToken(verifyRes.resetToken);
+      } else {
+        const err: any = new Error("Account email address is required alongside your verification code.");
+        err.statusCode = 400;
+        err.code = "EMAIL_REQUIRED";
+        throw err;
+      }
+    } else {
+      const err: any = new Error("Invalid or expired verification code. Please check your code or request a new one.");
       err.statusCode = 400;
       err.code = "INVALID_RESET_TOKEN";
       throw err;
     }
 
-    const user = await db.findUserByEmail(verification.email);
+    const user = await db.findUserByEmail(targetEmail);
     if (!user) {
       const err: any = new Error("User account not found.");
       err.statusCode = 404;
@@ -344,8 +363,8 @@ export class AuthService {
       throw err;
     }
 
-    if (!newPassword || newPassword.length < 8) {
-      const err: any = new Error("Password must be at least 8 characters long.");
+    if (!newPassword || newPassword.length < 6) {
+      const err: any = new Error("Password must be at least 6 characters long.");
       err.statusCode = 400;
       err.code = "VALIDATION_ERROR";
       throw err;
@@ -355,8 +374,8 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(newPassword, salt);
     await db.updateUser(user.id, { passwordHash });
 
-    // Invalidate reset session token
-    db.consumeResetSessionToken(resetToken.trim());
+    // Invalidate any active reset session token
+    db.consumeResetSessionToken(tokenTrim);
 
     return {
       message: "Your Career Engine AI password has been updated successfully. You can now log in.",
@@ -368,7 +387,7 @@ export class AuthService {
     return this.requestPasswordResetOTP(email);
   }
 
-  public static async resetPassword(resetToken: string, newPassword: string) {
-    return this.resetPasswordWithToken(resetToken, newPassword);
+  public static async resetPassword(resetToken: string, newPassword: string, email?: string) {
+    return this.resetPasswordWithToken(resetToken, newPassword, email);
   }
 }

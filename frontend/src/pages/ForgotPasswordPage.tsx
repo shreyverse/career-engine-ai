@@ -55,7 +55,7 @@ export const ForgotPasswordPage: React.FC = () => {
     setError(null);
 
     try {
-      const res = await authService.resetPassword(resetToken.trim(), newPassword);
+      const res = await authService.resetPassword(resetToken.trim(), newPassword, email.trim());
       setSuccessMsg(res.message || "Identity confirmed and password updated!");
       setStep("SUCCESS");
     } catch (err: any) {

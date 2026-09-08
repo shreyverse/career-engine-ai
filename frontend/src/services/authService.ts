@@ -80,10 +80,10 @@ export const authService = {
     });
   },
 
-  async resetPassword(resetToken: string, newPassword: string): Promise<{ message: string }> {
+  async resetPassword(resetToken: string, newPassword: string, email?: string): Promise<{ message: string }> {
     return apiRequest<{ message: string }>("/auth/reset-password", {
       method: "POST",
-      body: JSON.stringify({ resetToken, newPassword }),
+      body: JSON.stringify({ resetToken, newPassword, email }),
     });
   },
 };

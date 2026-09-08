@@ -113,12 +113,17 @@ export class AuthController {
 
   public static async resetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { resetToken, newPassword } = req.body;
-      if (!resetToken || !newPassword) {
-        sendError(res, "Reset token and new password are required.", 400, "VALIDATION_ERROR");
+      const { resetToken, newPassword, email, otp } = req.body;
+      const tokenOrCode = resetToken || otp;
+      if (!tokenOrCode || !newPassword) {
+        sendError(res, "Reset token or verification code, and new password are required.", 400, "VALIDATION_ERROR");
         return;
       }
-      const result = await AuthService.resetPasswordWithToken(resetToken.trim(), newPassword);
+      const result = await AuthService.resetPasswordWithToken(
+        tokenOrCode.trim(),
+        newPassword,
+        email ? email.trim() : undefined
+      );
       sendSuccess(res, result, 200, { message: result.message });
     } catch (error) {
       next(error);

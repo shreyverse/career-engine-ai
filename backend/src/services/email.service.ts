@@ -17,6 +17,9 @@ export class EmailService {
           user,
           pass,
         },
+        connectionTimeout: 5000,
+        greetingTimeout: 5000,
+        socketTimeout: 8000,
       });
     } else {
       // Local development fallback stream transport
@@ -41,12 +44,16 @@ export class EmailService {
       console.log('Career Engine email service connected successfully.');
       return true;
     } catch (err: any) {
-      console.error('Career Engine email service configuration failed.');
+      console.error('Career Engine email service configuration failed:', err.message);
       return false;
     }
   }
 
   public static async sendPasswordResetOTP(toEmail: string, otp: string): Promise<boolean> {
+    console.log(`====================================================`);
+    console.log(`🔑 [EmailService] Password Reset OTP for ${toEmail}: [ ${otp} ]`);
+    console.log(`====================================================`);
+
     try {
       const transporter = this.getTransporter();
       const user = process.env.EMAIL_USER || process.env.SMTP_USER || 'careerengine460@gmail.com';
@@ -100,7 +107,7 @@ export class EmailService {
         </html>
       `;
 
-      const info = await transporter.sendMail({
+      const sendPromise = transporter.sendMail({
         from,
         to: toEmail,
         subject: 'Career Engine AI — Your Password Reset OTP',
@@ -108,12 +115,15 @@ export class EmailService {
         html,
       });
 
-      console.log(`[EmailService] Password reset OTP dispatched to ${toEmail}`);
-      console.log(`[EmailService Local Stream OTP for ${toEmail}]: ${otp}`);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Email dispatch timed out after 6 seconds')), 6000)
+      );
 
+      await Promise.race([sendPromise, timeoutPromise]);
+      console.log(`[EmailService] Password reset OTP successfully dispatched to ${toEmail}`);
       return true;
     } catch (err: any) {
-      console.error('[EmailService] Failed to dispatch email:', err.message);
+      console.error('[EmailService] Failed or timed out dispatching email:', err.message);
       return false;
     }
   }
