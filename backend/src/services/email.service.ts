@@ -1,4 +1,10 @@
 import nodemailer from 'nodemailer';
+import dns from 'dns';
+
+// Force Node.js to prefer IPv4 over IPv6 (fixes ENETUNREACH errors on cloud hosts like Render)
+try {
+  dns.setDefaultResultOrder('ipv4first');
+} catch {}
 
 export class EmailService {
   private static transporter: nodemailer.Transporter | null = null;
@@ -13,11 +19,12 @@ export class EmailService {
       // Remove all spaces Google App Passwords display by default (e.g. "abcd efgh ijkl mnop" -> "abcdefghijklmnop")
       const cleanPass = rawPass.replace(/\s+/g, '').trim();
 
-      // Direct SSL/TLS Port 465 transport (Most reliable for cloud hosts like Render)
-      this.transporter = nodemailer.createTransport({
+      // Direct SSL/TLS Port 465 transport over IPv4 (Most reliable for cloud hosts like Render)
+      const transportOptions: any = {
         host: 'smtp.gmail.com',
         port: 465,
         secure: true,
+        family: 4, // Force IPv4 socket connection
         auth: {
           user,
           pass: cleanPass,
@@ -28,7 +35,9 @@ export class EmailService {
         connectionTimeout: 10000,
         greetingTimeout: 10000,
         socketTimeout: 15000,
-      });
+      };
+
+      this.transporter = nodemailer.createTransport(transportOptions);
     } else {
       // Local development fallback stream transport
       this.transporter = nodemailer.createTransport({
