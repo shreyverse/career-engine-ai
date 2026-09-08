@@ -11,6 +11,8 @@ const server = app.listen(env.port, () => {
   console.log(`🌐 Environment: ${env.nodeEnv}`);
   console.log(`🩺 Health check: http://localhost:${env.port}/health`);
   console.log(`=========================================`);
+
+  EmailService.verifyConnection();
 });
 
 // Graceful shutdown handlers

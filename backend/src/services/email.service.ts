@@ -6,20 +6,28 @@ export class EmailService {
   public static getTransporter(): nodemailer.Transporter {
     if (this.transporter) return this.transporter;
 
-    const user = process.env.EMAIL_USER || process.env.SMTP_USER || 'careerengine460@gmail.com';
-    const pass = process.env.EMAIL_APP_PASSWORD || process.env.SMTP_PASS;
+    const user = (process.env.EMAIL_USER || process.env.SMTP_USER || 'careerengine460@gmail.com').trim();
+    const rawPass = process.env.EMAIL_APP_PASSWORD || process.env.SMTP_PASS;
 
-    if (pass) {
-      // Production Gmail SMTP Transport with Nodemailer
+    if (rawPass && rawPass.trim().length > 0) {
+      // Remove all spaces Google App Passwords display by default (e.g. "abcd efgh ijkl mnop" -> "abcdefghijklmnop")
+      const cleanPass = rawPass.replace(/\s+/g, '').trim();
+
+      // Direct SSL/TLS Port 465 transport (Most reliable for cloud hosts like Render)
       this.transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
         auth: {
           user,
-          pass,
+          pass: cleanPass,
         },
-        connectionTimeout: 5000,
-        greetingTimeout: 5000,
-        socketTimeout: 8000,
+        tls: {
+          rejectUnauthorized: false,
+        },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
       });
     } else {
       // Local development fallback stream transport
@@ -36,15 +44,15 @@ export class EmailService {
     try {
       const pass = process.env.EMAIL_APP_PASSWORD || process.env.SMTP_PASS;
       if (!pass) {
-        console.log('[EmailService] EMAIL_APP_PASSWORD not set in environment. Running in local stream transport mode.');
+        console.log('[EmailService] EMAIL_APP_PASSWORD not set in environment. Running in fallback mode.');
         return true;
       }
       const transporter = this.getTransporter();
       await transporter.verify();
-      console.log('Career Engine email service connected successfully.');
+      console.log('✅ [EmailService] Gmail SMTP connected successfully and verified!');
       return true;
     } catch (err: any) {
-      console.error('Career Engine email service configuration failed:', err.message);
+      console.error('❌ [EmailService] Gmail SMTP connection failed:', err.message);
       return false;
     }
   }
