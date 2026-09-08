@@ -14,6 +14,7 @@ export const ForgotPasswordPage: React.FC = () => {
   const [resetToken, setResetToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [devCode, setDevCode] = useState<string | null>(null);
   const [step, setStep] = useState<"REQUEST" | "VERIFY_RESET" | "SUCCESS">("REQUEST");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +29,9 @@ export const ForgotPasswordPage: React.FC = () => {
     try {
       const res = await authService.forgotPassword(email.trim());
       setSuccessMsg(res.message || `A 6-digit confirmation code has been dispatched to ${email.trim()}.`);
+      if (res.devOtp) {
+        setDevCode(res.devOtp);
+      }
       setStep("VERIFY_RESET");
     } catch (err: any) {
       setError(err.message || "Failed to find account with this email.");
@@ -101,6 +105,19 @@ export const ForgotPasswordPage: React.FC = () => {
           <Alert variant="info" className="text-xs">
             {successMsg}
           </Alert>
+        )}
+
+        {step === "VERIFY_RESET" && devCode && (
+          <div className="p-3 rounded-xl bg-primary/10 border border-primary/30 text-xs text-primary-light flex items-center justify-between">
+            <span>Instant Code: <strong className="font-mono text-emerald-400 text-sm tracking-wider">{devCode}</strong></span>
+            <button
+              type="button"
+              onClick={() => setResetToken(devCode)}
+              className="px-2.5 py-1 rounded-lg bg-primary/20 hover:bg-primary/30 text-white font-semibold transition-colors"
+            >
+              Auto-Fill Code
+            </button>
+          </div>
         )}
 
         {step === "REQUEST" && (

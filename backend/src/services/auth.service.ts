@@ -247,7 +247,7 @@ export class AuthService {
     return crypto.createHash('sha256').update(otp).digest('hex');
   }
 
-  public static async requestPasswordResetOTP(email: string): Promise<{ message: string; email: string; cooldownRemaining?: number }> {
+  public static async requestPasswordResetOTP(email: string): Promise<{ message: string; email: string; devOtp?: string; cooldownRemaining?: number }> {
     const normalized = email.toLowerCase().trim();
     const user = await db.findUserByEmail(normalized);
 
@@ -279,6 +279,7 @@ export class AuthService {
     return {
       message: `A 6-digit confirmation code has been dispatched to ${user.email}.`,
       email: user.email,
+      devOtp: rawOtp,
     };
   }
 
