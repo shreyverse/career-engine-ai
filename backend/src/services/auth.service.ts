@@ -247,7 +247,7 @@ export class AuthService {
     return crypto.createHash('sha256').update(otp).digest('hex');
   }
 
-  public static async requestPasswordResetOTP(email: string): Promise<{ message: string; email: string; devOtp?: string; cooldownRemaining?: number }> {
+  public static async requestPasswordResetOTP(email: string): Promise<{ message: string; email: string; cooldownRemaining?: number }> {
     const normalized = email.toLowerCase().trim();
     const user = await db.findUserByEmail(normalized);
 
@@ -271,15 +271,18 @@ export class AuthService {
       throw err;
     }
 
-    // Safely dispatch email asynchronously without blocking the HTTP response
-    EmailService.sendPasswordResetOTP(user.email, rawOtp).catch((err) => {
-      console.error('[AuthService] Async email dispatch background task notice:', err.message);
-    });
+    // Await email dispatch strictly over Nodemailer SMTP
+    const sent = await EmailService.sendPasswordResetOTP(user.email, rawOtp);
+    if (!sent) {
+      const err: any = new Error(`Failed to send email to ${user.email}. Please verify email configuration or try again.`);
+      err.statusCode = 500;
+      err.code = "EMAIL_SEND_FAILED";
+      throw err;
+    }
 
     return {
-      message: `A 6-digit confirmation code has been dispatched to ${user.email}.`,
+      message: `A 6-digit confirmation code has been dispatched to ${user.email}. Please check your inbox.`,
       email: user.email,
-      devOtp: rawOtp,
     };
   }
 

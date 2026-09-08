@@ -66,8 +66,8 @@ export const authService = {
     });
   },
 
-  async forgotPassword(email: string): Promise<{ message: string; email: string; devOtp?: string }> {
-    return apiRequest<{ message: string; email: string; devOtp?: string }>("/auth/forgot-password", {
+  async forgotPassword(email: string): Promise<{ message: string; email: string }> {
+    return apiRequest<{ message: string; email: string }>("/auth/forgot-password", {
       method: "POST",
       body: JSON.stringify({ email }),
     });
